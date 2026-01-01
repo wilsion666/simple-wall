@@ -80,7 +80,7 @@
   let page = 1;
 
   async function load() {
-    const res = await fetch('products.csv?v=' + Date.now());
+    const res = await fetch('men sunglasses-top10.csv?v=' + Date.now());
     const text = await res.text();
     const table = parseCSV(text);
 
@@ -91,7 +91,7 @@
     const iSales = idx('月销量');
 
     if (iASIN === -1 || iSales === -1) {
-      alert('products.csv 表头必须包含：ASIN, 月销量');
+      alert('men sunglasses-top10.csv 表头必须包含：ASIN, 月销量');
       return;
     }
 
@@ -174,3 +174,4 @@
 </script>
 </body>
 </html>
+
