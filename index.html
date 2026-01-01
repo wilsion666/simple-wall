@@ -97,6 +97,29 @@
     return Number.isFinite(n) ? n : 0;
   }
 
+  function placeholderSvg(text = 'NO IMAGE') {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'>
+      <rect width='260' height='260' fill='#f2f2f2' />
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='#999' font-size='16' font-family='Arial, sans-serif'>${text}</text>
+    </svg>`;
+    return 'data:image/svg+xml,' + encodeURIComponent(svg);
+  }
+
+  function handleImageError(img) {
+    const asin = img.dataset.asin;
+
+    if (img.dataset.fallback === 'jpg') {
+      img.dataset.fallback = 'png';
+      img.src = `images/${asin}.png`;
+      return;
+    }
+
+    if (img.dataset.fallback === 'png') {
+      img.dataset.fallback = 'placeholder';
+      img.src = placeholderSvg('NO IMAGE');
+    }
+  }
+
   let all = [];
   let page = 1;
 
@@ -144,6 +167,7 @@
     return list;
   }
 
+  
   function render() {
     const list = getFiltered();
     const size = Number(document.getElementById('pageSize').value) || 100;
@@ -166,22 +190,36 @@
       // 你的图片已放在 images 文件夹下，优先尝试 JPG，缺失时回退 PNG，仍失败则用灰底占位
       const card = document.createElement('div');
       card.className = 'card';
-      card.innerHTML = `
-        <a href="${url}" target="_blank" rel="noopener">
-          <div class="imgbox">
-            <img src="images/${x.asin}.jpg" loading="lazy" alt="${x.asin}" data-fallback="jpg"
-                 onerror="
-                   if (this.dataset.fallback === 'jpg') { this.dataset.fallback = 'png'; this.src = 'images/${x.asin}.png'; return; }
-                   if (this.dataset.fallback === 'png') { this.dataset.fallback = 'placeholder'; this.src = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27260%27 height=%27260%27 viewBox=%270 0 260 260%27%3E%3Crect width=%27260%27 height=%27260%27 fill=%27%23f2f2f2%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%23999%27 font-size=%2716%27 font-family=%27Arial, sans-serif%27%3ENO IMAGE%3C/text%3E%3C/svg%3E'; }
-                 ">
-          </div>
-        </a>
-        <div class="meta">
-          <div class="asin">ASIN：${x.asin}</div>
-          <div class="sales">月销量：${x.monthlySales.toLocaleString()}</div>
-          <div><a href="${url}" target="_blank" rel="noopener">打开亚马逊</a></div>
-        </div>
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener';
+
+      const imgBox = document.createElement('div');
+      imgBox.className = 'imgbox';
+
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.alt = x.asin;
+      img.dataset.fallback = 'jpg';
+      img.dataset.asin = x.asin;
+      img.src = `images/${x.asin}.jpg`;
+      img.onerror = () => handleImageError(img);
+
+      imgBox.appendChild(img);
+      link.appendChild(imgBox);
+      card.appendChild(link);
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `
+        <div class="asin">ASIN：${x.asin}</div>
+        <div class="sales">月销量：${x.monthlySales.toLocaleString()}</div>
+        <div><a href="${url}" target="_blank" rel="noopener">打开亚马逊</a></div>
       `;
+
+      card.appendChild(meta);
       grid.appendChild(card);
     }
   }
