@@ -50,23 +50,44 @@
   </div>
 
 <script>
-  // --- CSV 解析（支持带引号字段） ---
+  // --- 解析 CSV：自动识别分隔符（逗号/分号/Tab）+ 兼容 BOM ---
   function parseCSV(text) {
+    // 去掉 UTF-8 BOM
+    text = text.replace(/^\uFEFF/, '');
+
+    // 自动判断分隔符：逗号/分号/Tab
+    const firstLine = text.split(/\r?\n/).find(l => l.trim().length) || '';
+    const candidates = [',', ';', '\t'];
+    let sep = ',';
+    let best = -1;
+
+    for (const c of candidates) {
+      const re = c === '\t' ? /\t/g : new RegExp('\\' + c, 'g');
+      const count = (firstLine.match(re) || []).length;
+      if (count > best) { best = count; sep = c; }
+    }
+
     const rows = [];
     let row = [], cur = '', inQuotes = false;
+
     for (let i=0; i<text.length; i++) {
-      const c = text[i], n = text[i+1];
-      if (c === '"' && inQuotes && n === '"') { cur += '"'; i++; continue; }
-      if (c === '"') { inQuotes = !inQuotes; continue; }
-      if (c === ',' && !inQuotes) { row.push(cur); cur = ''; continue; }
-      if ((c === '\n' || c === '\r') && !inQuotes) {
+      const ch = text[i], n = text[i+1];
+
+      if (ch === '"' && inQuotes && n === '"') { cur += '"'; i++; continue; }
+      if (ch === '"') { inQuotes = !inQuotes; continue; }
+
+      if (ch === sep && !inQuotes) { row.push(cur); cur = ''; continue; }
+
+      if ((ch === '\n' || ch === '\r') && !inQuotes) {
         if (cur.length || row.length) { row.push(cur); rows.push(row); }
         cur = ''; row = [];
         continue;
       }
-      cur += c;
+      cur += ch;
     }
+
     if (cur.length || row.length) { row.push(cur); rows.push(row); }
+
     return rows.filter(r => r.some(x => String(x).trim() !== ''));
   }
 
@@ -80,18 +101,20 @@
   let page = 1;
 
   async function load() {
-    const res = await fetch('men sunglasses-top10.csv?v=' + Date.now());
+    // 这里读取你仓库里的 CSV 文件名（你现在是 men sunglasses-top10.csv）
+    // 如果你以后改成 products.csv，这里也可以改回 products.csv
+    const res = await fetch('men%20sunglasses-top10.csv?v=' + Date.now());
     const text = await res.text();
     const table = parseCSV(text);
 
-    const header = table[0].map(h => String(h).trim());
+    const header = table[0].map(h => String(h).replace(/^\uFEFF/, '').trim());
     const idx = (name) => header.findIndex(h => h === name);
 
     const iASIN = idx('ASIN');
     const iSales = idx('月销量');
 
     if (iASIN === -1 || iSales === -1) {
-      alert('men sunglasses-top10.csv 表头必须包含：ASIN, 月销量');
+      alert('CSV 表头必须包含：ASIN, 月销量（注意：CSV 分隔符要正确，已支持逗号/分号/Tab）');
       return;
     }
 
@@ -107,9 +130,7 @@
     const q = document.getElementById('q').value.trim().toLowerCase();
     let list = all;
 
-    if (q) {
-      list = list.filter(x => x.asin.toLowerCase().includes(q));
-    }
+    if (q) list = list.filter(x => x.asin.toLowerCase().includes(q));
 
     const sort = document.getElementById('sort').value;
     list = [...list].sort((a,b) => {
@@ -141,8 +162,11 @@
 
     for (const x of view) {
       const url = `https://www.amazon.com/dp/${x.asin}`;
-      const imgJpg = `images/${x.asin}.jpg`;
-      const imgPng = `images/${x.asin}.png`;
+
+      // 你当前图片在仓库根目录，所以直接用 `${ASIN}.jpg`
+      // 如果你以后把图片放进 images 文件夹，再改成 `images/${x.asin}.jpg`
+      const imgJpg = `${x.asin}.jpg`;
+      const imgPng = `${x.asin}.png`;
 
       const card = document.createElement('div');
       card.className = 'card';
@@ -174,4 +198,3 @@
 </script>
 </body>
 </html>
-
