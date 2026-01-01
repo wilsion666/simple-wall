@@ -105,19 +105,31 @@
     return 'data:image/svg+xml,' + encodeURIComponent(svg);
   }
 
-  function handleImageError(img) {
-    const asin = img.dataset.asin;
+  function logImageWarning(asin, stage, reason) {
+    console.warn(`[图片回退] ASIN ${asin}: ${reason}，切换到 ${stage}`);
+  }
 
-    if (img.dataset.fallback === 'jpg') {
+  function handleImageError(event) {
+    const img = event.currentTarget || event;
+    const asin = img.dataset.asin || '未知 ASIN';
+    const current = img.dataset.fallback;
+
+    if (current === 'jpg') {
       img.dataset.fallback = 'png';
+      logImageWarning(asin, 'PNG', 'JPG 加载失败');
       img.src = `images/${asin}.png`;
       return;
     }
 
-    if (img.dataset.fallback === 'png') {
+    if (current === 'png') {
       img.dataset.fallback = 'placeholder';
+      img.onerror = null;
+      logImageWarning(asin, '占位图', 'PNG 加载失败');
       img.src = placeholderSvg('NO IMAGE');
+      return;
     }
+
+    console.warn(`[图片回退] ASIN ${asin}: 占位图也加载失败，请检查 placeholderSvg 输出`);
   }
 
   let all = [];
@@ -205,7 +217,7 @@
       img.dataset.fallback = 'jpg';
       img.dataset.asin = x.asin;
       img.src = `images/${x.asin}.jpg`;
-      img.onerror = () => handleImageError(img);
+      img.onerror = handleImageError;
 
       imgBox.appendChild(img);
       link.appendChild(imgBox);
