@@ -1,14 +1,12 @@
 {
   "rewrites": [
-    { "source": "/wall", "destination": "/" }
-  ]
-}
+    { "source": "/wall", "destination": "/" },
+    { "source": "/wall/", "destination": "/" },
 
-{
-  "rewrites": [
     { "source": "/1688", "destination": "/1688.html" },
     { "source": "/1688/", "destination": "/1688.html" }
   ]
 }
+
 
 
