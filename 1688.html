@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>1688 产品墙</title>
+  <style>
+    :root{--bg:#f6f7fb;--card:#fff;--text:#111;--muted:#666;--shadow:0 6px 20px rgba(20,20,40,.08);--radius:16px;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei";background:var(--bg);color:var(--text);}
+    .wrap{max-width:1280px;margin:24px auto;padding:0 16px;}
+    h1{margin:0 0 14px;font-size:28px}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0 18px;}
+    input,select,button{border:1px solid #ddd;border-radius:10px;padding:10px 12px;font-size:14px;background:#fff;}
+    button{cursor:pointer}
+    .meta{color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;}
+    @media (max-width:1200px){.grid{grid-template-columns:repeat(4,1fr)}}
+    @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:520px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;}
+    .imgbox{background:#fff;aspect-ratio: 4/3;display:flex;align-items:center;justify-content:center}
+    .imgbox img{max-width:100%;max-height:100%;object-fit:contain}
+    .pad{padding:12px 14px}
+    .title{font-weight:700;font-size:14px;line-height:1.25;margin:0 0 8px;min-height:36px}
+    .row{font-size:13px;color:var(--muted);line-height:1.5}
+    .row b{color:var(--text)}
+    .link{display:inline-block;margin-top:8px;color:#0b66ff;text-decoration:none;font-size:13px}
+    .pager{display:flex;gap:10px;align-items:center;margin:18px 0}
+    .sp{flex:1}
+    .tag{display:inline-block;padding:4px 8px;border-radius:999px;background:#f0f2ff;color:#2b3cff;font-size:12px;margin-left:6px}
+    .warn{background:#fff3cd;border:1px solid #ffe69c;color:#664d03;padding:10px 12px;border-radius:12px;margin:10px 0;display:none}
+    code{background:#f1f1f1;padding:2px 6px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>1688 产品墙 <span class="tag">CSV + 图片</span></h1>
+    <div class="meta">规则：<code>1688.csv</code> 放根目录；图片放 <code>images/1688/</code>；图片名用 <code>id</code> 对齐。</div>
+
+    <div id="warn" class="warn"></div>
+
+    <div class="bar">
+      <input id="q" placeholder="搜索：id / 标题" style="min-width:240px" />
+      <select id="sort">
+        <option value="idAsc">按ID：小→大</option>
+        <option value="idDesc">按ID：大→小</option>
+        <option value="titleAsc">按标题：A→Z</option>
+        <option value="titleDesc">按标题：Z→A</option>
+      </select>
+      <select id="pageSize">
+        <option value="50">每页 50</option>
+        <option value="100" selected>每页 100</option>
+        <option value="200">每页 200</option>
+      </select>
+      <button id="reload">重新加载</button>
+      <div class="sp"></div>
+      <div class="meta" id="count"></div>
+    </div>
+
+    <div class="pager">
+      <button id="prev">上一页</button>
+      <button id="next">下一页</button>
+      <div class="sp"></div>
+      <div class="meta" id="pageInfo"></div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+<script>
+  // ====== 配置区（你一般不用改）======
+  const CSV_FILE = '1688.csv';         // 根目录
+  const IMG_BASE = 'images/1688/';     // 图片文件夹
+  // =================================
+
+  const $ = (id)=>document.getElementById(id);
+  const warn = (msg)=>{
+    const el = $('warn');
+    el.style.display = 'block';
+    el.textContent = msg;
+  }
+  const clearWarn = ()=>{
+    const el = $('warn');
+    el.style.display = 'none';
+    el.textContent = '';
+  }
+
+  function parseCSV(text){
+    // 支持逗号/分号/tab
+    const lines = text.replace(/\r/g,'').split('\n').filter(l=>l.trim().length);
+    const rows = [];
+    for(const line of lines){
+      let sep = ',';
+      if(line.includes('\t')) sep = '\t';
+      else if(line.includes(';') && !line.includes(',')) sep = ';';
+
+      // 简单 CSV 解析：支持带引号
+      const out = [];
+      let cur = '', inQ = false;
+      for(let i=0;i<line.length;i++){
+        const ch = line[i];
+        if(ch === '"'){ inQ = !inQ; continue; }
+        if(!inQ && ch === sep){ out.push(cur); cur=''; continue; }
+        cur += ch;
+      }
+      out.push(cur);
+      rows.push(out.map(s=>String(s).trim()));
+    }
+    return rows;
+  }
+
+  function findHeaderIndex(header, candidates){
+    const lower = header.map(h=>String(h||'').trim().toLowerCase());
+    for(const c of candidates){
+      const idx = lower.indexOf(c.toLowerCase());
+      if(idx !== -1) return idx;
+    }
+    return -1;
+  }
+
+  function buildImg(id){
+    const img = new Image();
+    img.loading = 'lazy';
+    img.alt = id;
+
+    // 先 jpg，再 png，再 webp
+    const tryList = [`${IMG_BASE}${id}.jpg`, `${IMG_BASE}${id}.png`, `${IMG_BASE}${id}.webp`];
+    let k = 0;
+    img.src = tryList[k];
+    img.onerror = ()=>{
+      k++;
+      if(k < tryList.length) img.src = tryList[k];
+      else img.src = ''; // 找不到就空
+    };
+    return img;
+  }
+
+  let all = [];
+  let page = 1;
+
+  async function load(){
+    clearWarn();
+    const res = await fetch(`${CSV_FILE}?v=${Date.now()}`); // 防缓存
+    if(!res.ok){
+      warn(`读取不到 ${CSV_FILE}（请确认它在仓库根目录，且已 push）`);
+      return;
+    }
+    const text = await res.text();
+    const table = parseCSV(text);
+    if(!table.length){
+      warn(`${CSV_FILE} 为空或格式不正确`);
+      return;
+    }
+
+    const header = table[0].map(h=>String(h||'').trim());
+    const iId = findHeaderIndex(header, ['id','编号','货号','产品id','productid','image','图片','图片名','filename','文件名']);
+    const iTitle = findHeaderIndex(header, ['title','标题','名称','name']);
+    const iUrl = findHeaderIndex(header, ['url','link','链接','1688链接','商品链接','producturl']);
+
+    if(iId === -1 || iUrl === -1){
+      warn(`CSV 表头必须至少包含：id + url（大小写/中文都行）。例如：id,title,url`);
+      return;
+    }
+
+    all = table.slice(1).map(r=>({
+      id: (r[iId]||'').trim(),
+      title: (iTitle!==-1 ? (r[iTitle]||'').trim() : ''),
+      url: (r[iUrl]||'').trim()
+    })).filter(x=>x.id && x.url);
+
+    page = 1;
+    render();
+  }
+
+  function getFiltered(){
+    const q = $('q').value.trim().toLowerCase();
+    let list = all;
+
+    if(q){
+      list = list.filter(x =>
+        x.id.toLowerCase().includes(q) ||
+        (x.title||'').toLowerCase().includes(q)
+      );
+    }
+
+    const sort = $('sort').value;
+    list = [...list].sort((a,b)=>{
+      if(sort === 'idAsc') return a.id.localeCompare(b.id);
+      if(sort === 'idDesc') return b.id.localeCompare(a.id);
+      if(sort === 'titleAsc') return (a.title||'').localeCompare(b.title||'');
+      if(sort === 'titleDesc') return (b.title||'').localeCompare(a.title||'');
+      return 0;
+    });
+
+    return list;
+  }
+
+  function render(){
+    const list = getFiltered();
+    const pageSize = parseInt($('pageSize').value,10) || 100;
+    const total = list.length;
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    page = Math.min(page, pages);
+
+    $('count').textContent = `共 ${total} 个`;
+    $('pageInfo').textContent = `第 ${page} / ${pages} 页`;
+
+    const start = (page-1)*pageSize;
+    const slice = list.slice(start, start + pageSize);
+
+    const grid = $('grid');
+    grid.innerHTML = '';
+    for(const item of slice){
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const imgbox = document.createElement('div');
+      imgbox.className = 'imgbox';
+      const img = buildImg(item.id);
+      imgbox.appendChild(img);
+
+      const pad = document.createElement('div');
+      pad.className = 'pad';
+
+      const t = document.createElement('div');
+      t.className = 'title';
+      t.textContent = item.title ? item.title : `ID: ${item.id}`;
+
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `<b>ID：</b>${item.id}`;
+
+      const a = document.createElement('a');
+      a.className = 'link';
+      a.href = item.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = '打开 1688 链接';
+
+      pad.appendChild(t);
+      pad.appendChild(row);
+      pad.appendChild(a);
+
+      card.appendChild(imgbox);
+      card.appendChild(pad);
+      grid.appendChild(card);
+    }
+
+    $('prev').disabled = (page <= 1);
+    $('next').disabled = (page >= pages);
+  }
+
+  $('q').addEventListener('input', ()=>{ page = 1; render(); });
+  $('sort').addEventListener('change', ()=>{ page = 1; render(); });
+  $('pageSize').addEventListener('change', ()=>{ page = 1; render(); });
+  $('prev').addEventListener('click', ()=>{ page--; render(); });
+  $('next').addEventListener('click', ()=>{ page++; render(); });
+  $('reload').addEventListener('click', load);
+
+  load();
+</script>
+</body>
+</html>
