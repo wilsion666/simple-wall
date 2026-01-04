@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TikTok 产品墙</title>
+  <style>
+    :root{--bg:#f6f7fb;--card:#fff;--text:#111;--muted:#666;--shadow:0 6px 20px rgba(20,20,40,.08);--radius:16px}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei";background:var(--bg);color:var(--text)}
+    .wrap{max-width:1280px;margin:24px auto;padding:0 16px}
+    h1{margin:6px 0 8px;font-size:28px}
+    .hint{color:var(--muted);font-size:13px;margin:0 0 12px}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0 18px}
+    input,select,button{border:1px solid #ddd;border-radius:10px;padding:10px 12px;font-size:14px;background:#fff}
+    button{cursor:pointer}
+    .meta{margin-left:auto;color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+    @media (max-width:1200px){.grid{grid-template-columns:repeat(4,1fr)}}
+    @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:520px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+    .imgbox{background:#fff;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
+    .imgbox img{width:100%;height:100%;object-fit:contain}
+    .pad{padding:12px 14px}
+    .title{font-weight:700;margin:0 0 6px;font-size:14px;line-height:1.3}
+    .id{color:var(--muted);font-size:12px;margin:0 0 10px}
+    .links{display:flex;gap:10px;flex-wrap:wrap}
+    .links a{color:#1a73e8;text-decoration:none;font-size:13px}
+    .links a:hover{text-decoration:underline}
+    .pager{display:flex;gap:10px;align-items:center;margin:16px 0}
+    .pager .pmeta{color:var(--muted);font-size:13px;margin-left:auto}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>TikTok 产品墙</h1>
+    <p class="hint">规则：tiktok.csv 放根目录；图片放 <code>images/tiktok/</code>；图片名与 <code>id</code> 对齐（支持 jpg/png/webp）。</p>
+
+    <div class="bar">
+      <input id="q" placeholder="搜索：id / 标题" />
+      <select id="sort">
+        <option value="idAsc">按ID：小→大</option>
+        <option value="idDesc">按ID：大→小</option>
+      </select>
+      <select id="per">
+        <option>24</option>
+        <option selected>60</option>
+        <option>120</option>
+      </select>
+      <button id="reload">重新加载</button>
+      <div class="meta" id="meta">加载中…</div>
+    </div>
+
+    <div class="pager">
+      <button id="prev">上一页</button>
+      <button id="next">下一页</button>
+      <div class="pmeta" id="pmeta"></div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+<script>
+  const CSV_FILE = 'tiktok.csv';
+  const IMG_DIR = 'images/tiktok/';
+
+  let all = [];
+  let page = 1;
+
+  const $ = (id) => document.getElementById(id);
+
+  function parseCSV(text) {
+    // 支持逗号/分号/tab
+    const lines = text.replace(/\r/g, '').split('\n').filter(Boolean);
+    const rows = lines.map(line => {
+      const delim = line.includes('\t') ? '\t' : (line.includes(';') ? ';' : ',');
+      return line.split(delim).map(s => s.trim());
+    });
+    return rows;
+  }
+
+  async function load() {
+    $('meta').textContent = '加载中…';
+    const res = await fetch(CSV_FILE + '?v=' + Date.now());
+    const text = await res.text();
+    const table = parseCSV(text);
+
+    const header = table[0].map(h => String(h).trim());
+    const idx = (name) => header.findIndex(h => h === name);
+
+    const iId = idx('id');
+    const iTitle = idx('title');
+    const iTikTok = idx('tiktok_url');
+    const iProduct = idx('product_url');
+
+    if (iId === -1 || iTitle === -1 || iTikTok === -1) {
+      alert('tiktok.csv 表头必须包含：id, title, tiktok_url（product_url 可选）');
+      return;
+    }
+
+    all = table.slice(1).map(r => ({
+      id: (r[iId] || '').trim(),
+      title: (r[iTitle] || '').trim(),
+      tiktok_url: (r[iTikTok] || '').trim(),
+      product_url: iProduct === -1 ? '' : (r[iProduct] || '').trim()
+    })).filter(x => x.id);
+
+    page = 1;
+    render();
+  }
+
+  function tryImg(id) {
+    // 按常见后缀尝试
+    const exts = ['.jpg','.jpeg','.png','.webp'];
+    // 直接先用 jpg，失败再用 onerror 切换
+    const img = document.createElement('img');
+    let k = 0;
+    img.src = IMG_DIR + id + exts[k];
+    img.onerror = () => {
+      k++;
+      if (k < exts.length) img.src = IMG_DIR + id + exts[k];
+      else img.src = '';
+    };
+    return img;
+  }
+
+  function getFiltered() {
+    const q = $('q').value.trim().toLowerCase();
+    let list = all;
+
+    if (q) {
+      list = list.filter(x =>
+        x.id.toLowerCase().includes(q) ||
+        x.title.toLowerCase().includes(q)
+      );
+    }
+
+    const sort = $('sort').value;
+    list = [...list].sort((a,b) => {
+      const A = a.id, B = b.id;
+      if (sort === 'idAsc') return A.localeCompare(B, 'en');
+      return B.localeCompare(A, 'en');
+    });
+
+    return list;
+  }
+
+  function render() {
+    const list = getFiltered();
+    const per = parseInt($('per').value, 10) || 60;
+    const total = list.length;
+    const pages = Math.max(1, Math.ceil(total / per));
+    if (page > pages) page = pages;
+
+    const start = (page - 1) * per;
+    const slice = list.slice(start, start + per);
+
+    $('meta').textContent = `共 ${total} 个`;
+    $('pmeta').textContent = `第 ${page} / ${pages} 页`;
+
+    const grid = $('grid');
+    grid.innerHTML = '';
+
+    slice.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const imgbox = document.createElement('div');
+      imgbox.className = 'imgbox';
+      imgbox.appendChild(tryImg(item.id));
+
+      const pad = document.createElement('div');
+      pad.className = 'pad';
+
+      const t = document.createElement('div');
+      t.className = 'title';
+      t.textContent = item.title || '(无标题)';
+
+      const id = document.createElement('div');
+      id.className = 'id';
+      id.textContent = 'ID：' + item.id;
+
+      const links = document.createElement('div');
+      links.className = 'links';
+
+      const a1 = document.createElement('a');
+      a1.href = item.tiktok_url || '#';
+      a1.target = '_blank';
+      a1.rel = 'noopener';
+      a1.textContent = '打开 TikTok';
+      links.appendChild(a1);
+
+      if (item.product_url) {
+        const a2 = document.createElement('a');
+        a2.href = item.product_url;
+        a2.target = '_blank';
+        a2.rel = 'noopener';
+        a2.textContent = '打开产品链接';
+        links.appendChild(a2);
+      }
+
+      pad.appendChild(t);
+      pad.appendChild(id);
+      pad.appendChild(links);
+
+      card.appendChild(imgbox);
+      card.appendChild(pad);
+      grid.appendChild(card);
+    });
+  }
+
+  $('q').addEventListener('input', () => { page = 1; render(); });
+  $('sort').addEventListener('change', () => { page = 1; render(); });
+  $('per').addEventListener('change', () => { page = 1; render(); });
+  $('reload').addEventListener('click', load);
+
+  $('prev').addEventListener('click', () => { page = Math.max(1, page-1); render(); });
+  $('next').addEventListener('click', () => {
+    const total = getFiltered().length;
+    const per = parseInt($('per').value, 10) || 60;
+    const pages = Math.max(1, Math.ceil(total / per));
+    page = Math.min(pages, page+1);
+    render();
+  });
+
+  load();
+</script>
+</body>
+</html>
