@@ -19,13 +19,11 @@
     .toc a{color:#0066cc;}
 
     details{background:#fff;border:1px solid #e8e8e8;border-radius:14px;padding:14px;margin-bottom:10px;}
-    summary{cursor:pointer;font-weight:700;}
-    p{line-height:1.8;margin:10px 0;}
-    .tag{display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #eee; background:#fafafa; color:#666; margin-left:8px;}
-    .muted{color:#666;}
-    .jump{float:right; font-size:12px; color:#0066cc; font-weight:400;}
-    .jump:hover{text-decoration:underline;}
-    .footer{margin-top:16px; color:#666; font-size:12px;}
+    summary{cursor:pointer;font-weight:700; display:flex; align-items:center; gap:10px;}
+    .tag{display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #eee; background:#fafafa; color:#666;}
+    .content{margin-top:10px;}
+    .placeholder{color:#666; line-height:1.8; margin:8px 0;}
+    .hint{font-size:12px;color:#888;margin:6px 0 0;}
     code{background:#f3f3f3;border:1px solid #eee;border-radius:8px;padding:2px 6px;}
   </style>
 </head>
@@ -43,7 +41,7 @@
     </div>
 
     <h1>产品开发系列（Amazon × AI）</h1>
-    <p class="sub">先把标题“占位”沉淀下来。后续你想补内容，直接展开对应条目，把占位文字替换掉即可。</p>
+    <p class="sub">先把标题“占位”沉淀下来。后续你想补内容，直接展开对应条目，把下面的占位文字替换掉即可。</p>
 
     <!-- 目录 -->
     <div class="toc" id="toc">
@@ -74,30 +72,112 @@
 
     <div id="articles"></div>
 
-    <!-- 20 个标题占位（内容先写“待补充”） -->
-    <details id="t01" open><summary>1. 机会识别到算清楚帐 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t02"><summary>2. 拿到一个产品先做什么 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t03"><summary>3. 失败产品复盘集合 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t04"><summary>4. 成功案例思考 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t05"><summary>5. 常见切入点 50 条清单 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t06"><summary>6. 不做产品 50 条清单 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t07"><summary>7. 市场结构判断 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t08"><summary>8. 单位经济模型推演 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t09"><summary>9. 起量成本推演 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t10"><summary>10. 飞书多维表格中台怎么搭 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t11"><summary>11. 开发动作 AI 化，自动化 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t12"><summary>12. 新人产品开发培训体 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t13"><summary>13. 创新=旧元素的新组合 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t14"><summary>14. 产品创新方法大全 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t15"><summary>15. 产品开发中的道/法/术/器 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t16"><summary>16. 区分伪概念 vs 有效动作 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t17"><summary>17. 评分分层规则 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t18"><summary>18. 产品开发与工具的关系 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t19"><summary>19. 市场筛选的逻辑 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
-    <details id="t20"><summary>20. 产品筛选的逻辑 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <!-- ✅ 你后续只需要替换每个 .content 里的内容 -->
+    <details id="t01" open>
+      <summary>1. 机会识别到算清楚帐 <span class="tag">待补充</span></summary>
+      <div class="content">
+        <p class="placeholder">这里写正文。你可以直接粘贴长文、分段、清单等。</p>
+        <p class="hint">提示：只改这里，不用动其它代码。</p>
+      </div>
+    </details>
 
-    <div class="footer">
-      小提示：后续你要加正文，只改每个 <code>&lt;details&gt;</code> 里面的 <code>&lt;p&gt;</code> 内容就行。
+    <details id="t02">
+      <summary>2. 拿到一个产品先做什么 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t03">
+      <summary>3. 失败产品复盘集合 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t04">
+      <summary>4. 成功案例思考 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t05">
+      <summary>5. 常见切入点 50 条清单 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t06">
+      <summary>6. 不做产品 50 条清单 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t07">
+      <summary>7. 市场结构判断 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t08">
+      <summary>8. 单位经济模型推演 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t09">
+      <summary>9. 起量成本推演 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t10">
+      <summary>10. 飞书多维表格中台怎么搭 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t11">
+      <summary>11. 开发动作 AI 化，自动化 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t12">
+      <summary>12. 新人产品开发培训体 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t13">
+      <summary>13. 创新=旧元素的新组合 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t14">
+      <summary>14. 产品创新方法大全 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t15">
+      <summary>15. 产品开发中的道/法/术/器 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t16">
+      <summary>16. 区分伪概念 vs 有效动作 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t17">
+      <summary>17. 评分分层规则 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t18">
+      <summary>18. 产品开发与工具的关系 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t19">
+      <summary>19. 市场筛选的逻辑 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <details id="t20">
+      <summary>20. 产品筛选的逻辑 <span class="tag">待补充</span></summary>
+      <div class="content"><p class="placeholder">这里写正文。</p></div>
+    </details>
+
+    <div style="margin-top:14px; color:#666; font-size:12px;">
+      后续写内容：展开某条 → 把 <code>&lt;div class="content"&gt;...&lt;/div&gt;</code> 里面的文字替换掉即可。
     </div>
   </div>
 </body>
