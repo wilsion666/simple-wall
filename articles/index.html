@@ -8,66 +8,97 @@
     body{font-family:Arial,system-ui,-apple-system; margin:0; background:#fafafa; color:#111;}
     .wrap{max-width:1100px; margin:0 auto; padding:20px 16px;}
     a{color:#111; text-decoration:none;}
-    .top{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+    .top{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
     .btn{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:10px 12px;}
     h1{font-size:22px;margin:0 0 6px;}
     .sub{color:#666;font-size:13px;margin:0 0 14px;}
+
+    .toc{background:#fff;border:1px solid #e8e8e8;border-radius:14px;padding:14px;margin:12px 0 12px;}
+    .toc h2{font-size:15px;margin:0 0 8px;}
+    .toc ul{margin:0; padding-left:18px; line-height:1.9;}
+    .toc a{color:#0066cc;}
+
     details{background:#fff;border:1px solid #e8e8e8;border-radius:14px;padding:14px;margin-bottom:10px;}
     summary{cursor:pointer;font-weight:700;}
     p{line-height:1.8;margin:10px 0;}
-    ul,ol{line-height:1.8;}
+    .tag{display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #eee; background:#fafafa; color:#666; margin-left:8px;}
+    .muted{color:#666;}
+    .jump{float:right; font-size:12px; color:#0066cc; font-weight:400;}
+    .jump:hover{text-decoration:underline;}
+    .footer{margin-top:16px; color:#666; font-size:12px;}
+    code{background:#f3f3f3;border:1px solid #eee;border-radius:8px;padding:2px 6px;}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
-      <a class="btn" href="/">← 返回首页</a>
-      <a class="btn" href="/wall">进入新品墙</a>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="/">← 返回首页</a>
+        <a class="btn" href="/wall">进入新品墙</a>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="#toc">目录</a>
+        <a class="btn" href="#articles">文章区</a>
+      </div>
     </div>
 
     <h1>产品开发系列（Amazon × AI）</h1>
-    <p class="sub">点击标题展开阅读。后续你可以持续把内容沉淀在这里，形成“内容资产”。</p>
+    <p class="sub">先把标题“占位”沉淀下来。后续你想补内容，直接展开对应条目，把占位文字替换掉即可。</p>
 
-    <!-- Article 1 -->
-    <details>
-      <summary>文章 1：用 AI 做“选品与趋势”，从灵感到可落地的决策链</summary>
-      <div style="margin-top:10px;">
-        <p><b>很多人把选品当成“找爆款链接”，但更有效的做法，是把选品当成一条决策链：</b>看见趋势 → 定义需求 → 形成假设 → 量化验证 → 设计差异化 → 计算利润与风险。AI 的价值不是替你拍脑袋，而是把这条链条“自动化、可复用、可追溯”。</p>
-        <p><b>第一步：把“趋势”拆成可验证的信号。</b>趋势不是一句“最近很火”，而是信号组合：搜索词热度变化、社媒内容密度、上新频率、头部品牌动作、Review 痛点聚类、价格带漂移。AI 可以把这些信号汇总成一张卡片：趋势强度、增长速度、竞争拥挤度、可切入点。</p>
-        <p><b>第二步：用 AI 做“产品定义”，而不是只看外观。</b>同一个产品外观，背后可能是不同 JTBD（Jobs To Be Done）。例如一个收纳篮：对家庭用户是“视觉整洁”；对宿舍用户是“省空间”；对露营用户是“轻便可折叠”。把 JTBD 写清楚，你才知道该怎么做差异化、该打什么词、该做什么图。</p>
-        <p><b>第三步：用 AI 做“竞品结构图”。</b>结构化输出：价格带分层、材质/工艺分布、尺寸区间、核心卖点矩阵、Review 负面Top10、A+ 叙事套路。你会发现：竞争不是“很多”，而是“拥挤在某几个位置”。</p>
-        <p><b>落地建议：</b>上传图片 → 自动生成：产品定义 / JTBD / 竞品矩阵 / 差异化建议 / 利润风险卡片；再点“一键验证” → 拉取关键词热度、竞品价格带、上新频率、Review 聚类；最后输出：<b>是否立项 + 为什么 + 下一步要采集哪些数据</b>。</p>
-      </div>
-    </details>
+    <!-- 目录 -->
+    <div class="toc" id="toc">
+      <h2>目录（点击跳转）</h2>
+      <ul>
+        <li><a href="#t01">1. 机会识别到算清楚帐</a></li>
+        <li><a href="#t02">2. 拿到一个产品先做什么</a></li>
+        <li><a href="#t03">3. 失败产品复盘集合</a></li>
+        <li><a href="#t04">4. 成功案例思考</a></li>
+        <li><a href="#t05">5. 常见切入点 50 条清单</a></li>
+        <li><a href="#t06">6. 不做产品 50 条清单</a></li>
+        <li><a href="#t07">7. 市场结构判断</a></li>
+        <li><a href="#t08">8. 单位经济模型推演</a></li>
+        <li><a href="#t09">9. 起量成本推演</a></li>
+        <li><a href="#t10">10. 飞书多维表格中台怎么搭</a></li>
+        <li><a href="#t11">11. 开发动作 AI 化，自动化</a></li>
+        <li><a href="#t12">12. 新人产品开发培训体</a></li>
+        <li><a href="#t13">13. 创新=旧元素的新组合</a></li>
+        <li><a href="#t14">14. 产品创新方法大全</a></li>
+        <li><a href="#t15">15. 产品开发中的道/法/术/器</a></li>
+        <li><a href="#t16">16. 区分伪概念 vs 有效动作</a></li>
+        <li><a href="#t17">17. 评分分层规则</a></li>
+        <li><a href="#t18">18. 产品开发与工具的关系</a></li>
+        <li><a href="#t19">19. 市场筛选的逻辑</a></li>
+        <li><a href="#t20">20. 产品筛选的逻辑</a></li>
+      </ul>
+    </div>
 
-    <!-- Article 2 -->
-    <details>
-      <summary>文章 2：用 AI 管广告：从“烧钱试错”到“关键词资产管理”</summary>
-      <div style="margin-top:10px;">
-        <p><b>亚马逊广告的核心不是投放动作，而是“关键词资产管理”。</b>你真正想要的是一套可循环的系统：发现词 → 证明词 → 养词 → 扩词 → 守词。AI 最擅长的，是把广告数据变成“可操作的分层结构”。</p>
-        <p><b>把关键词按“角色”分组：</b>转化词（稳定出单）、引流词（托流量）、防御词（品牌词/竞品词/类目核心词守位置）。AI 可以自动给每个词贴标签：相关性、转化率、CPC、阶段（探索/验证/放量/防守）。</p>
-        <p><b>把自动广告当“挖矿机”。</b>自动负责发现词；当某词达到阈值（如 2 单或 CVR 高于某值），AI 自动把它拎出来进手动精准/词组，并给初始竞价与否定建议。</p>
-        <p><b>一个实用 SOP：</b></p>
-        <ol>
-          <li>导入 7/14/30 天广告报表 → AI 清洗去重</li>
-          <li>识别：高转化词、潜力词、烧钱词、无效词</li>
-          <li>生成：新增精准、词组集合、否定列表、竞价微调建议（0.02 级别）</li>
-          <li>输出解释：为什么这么调、风险是什么、建议观察窗口（3-4 天）</li>
-        </ol>
-      </div>
-    </details>
+    <div id="articles"></div>
 
-    <!-- Article 3 -->
-    <details>
-      <summary>文章 3：用 AI 管库存与供应链：把“不断补货”变成“可预测的现金流机器”</summary>
-      <div style="margin-top:10px;">
-        <p><b>库存不是仓库问题，而是现金流问题。</b>你要管理的是：供货周期、库存覆盖天数、销量波动、广告弹性、回款延迟、断货损失与滞销损失。AI 的强项是把这些变量连起来，做出可解释的补货决策。</p>
-        <p><b>一个简单但有效的框架：</b><b>目标库存覆盖天数 = 交期 + 缓冲 + 活动/上新预留</b>。AI 可以每天计算每个 ASIN 的可售天数，并给出：断货风险、积压风险、最佳下单窗口。</p>
-        <p><b>让 AI 输出“补货理由”，而不是只给数量。</b>为什么现在下单？晚 7 天损失多少销售？多补 300 件增加多少滞销风险？把理由写出来，团队才会统一标准，不再靠经验争论。</p>
-        <p><b>你的网站可以做成“补货卡片”：</b>可售天数/断货日期预测、建议下单时间/数量（上下界）、关键假设与敏感性、现金流影响（占用资金/回款时间/周转预估）。</p>
-      </div>
-    </details>
+    <!-- 20 个标题占位（内容先写“待补充”） -->
+    <details id="t01" open><summary>1. 机会识别到算清楚帐 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t02"><summary>2. 拿到一个产品先做什么 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t03"><summary>3. 失败产品复盘集合 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t04"><summary>4. 成功案例思考 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t05"><summary>5. 常见切入点 50 条清单 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t06"><summary>6. 不做产品 50 条清单 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t07"><summary>7. 市场结构判断 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t08"><summary>8. 单位经济模型推演 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t09"><summary>9. 起量成本推演 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t10"><summary>10. 飞书多维表格中台怎么搭 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t11"><summary>11. 开发动作 AI 化，自动化 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t12"><summary>12. 新人产品开发培训体 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t13"><summary>13. 创新=旧元素的新组合 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t14"><summary>14. 产品创新方法大全 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t15"><summary>15. 产品开发中的道/法/术/器 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t16"><summary>16. 区分伪概念 vs 有效动作 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t17"><summary>17. 评分分层规则 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t18"><summary>18. 产品开发与工具的关系 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t19"><summary>19. 市场筛选的逻辑 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
+    <details id="t20"><summary>20. 产品筛选的逻辑 <span class="tag">待补充</span><a class="jump" href="#toc">↑回目录</a></summary><p class="muted">内容待补充。</p></details>
 
+    <div class="footer">
+      小提示：后续你要加正文，只改每个 <code>&lt;details&gt;</code> 里面的 <code>&lt;p&gt;</code> 内容就行。
+    </div>
   </div>
 </body>
 </html>
