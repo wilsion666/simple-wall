@@ -79,17 +79,19 @@
    * imgDir: 图片文件夹（images/xxx）
    *
    * 例：images/office-products/B0XXXX.jpg
-   *    articles/office-products.csv
+   *    office-products.csv
    */
-  const CATEGORIES = [
-    { key: "industrial-scientific", name: "Industrial & Scientific", csv: "articles/industrial-scientific.csv", imgDir: "images/Industrial & Scientific" },
-    { key: "musical-instruments", name: "Musical Instruments", csv: "articles/musical-instruments.csv", imgDir: "images/Musical Instruments" },
-    { key: "office-products", name: "Office Products", csv: "articles/office-products.csv", imgDir: "images/Office Products" },
-    { key: "patio-lawn-garden", name: "Patio, Lawn & Garden", csv: "articles/patio-lawn-garden.csv", imgDir: "images/Patio, Lawn & Garden" },
-    { key: "pet-supplies", name: "Pet Supplies", csv: "articles/pet-supplies.csv", imgDir: "images/Pet Supplies" },
-    { key: "sports-outdoors", name: "Sports & Outdoors", csv: "articles/sports-outdoors.csv", imgDir: "images/Sports & Outdoors" },
-    { key: "tools-home-improvement", name: "Tools & Home Improvement", csv: "articles/tools-home-improvement.csv", imgDir: "images/Tools & Home Improvement" },
-    { key: "toys-games", name: "Toys & Games", csv: "articles/toys-games.csv", imgDir: "images/Toys & Games" },
+   const CATEGORIES = [
+  { key: "industrial-scientific", name: "Industrial & Scientific", csv: "Industrial & Scientific.csv", imgDir: "images/Industrial & Scientific" },
+  { key: "musical-instruments",   name: "Musical Instruments",   csv: "Musical Instruments.csv",   imgDir: "images/Musical Instruments" },
+  { key: "office-products",       name: "Office Products",       csv: "Office Products.csv",       imgDir: "images/Office Products" },
+  { key: "patio-lawn-garden",     name: "Patio, Lawn & Garden",  csv: "Patio, Lawn & Garden.csv",  imgDir: "images/Patio, Lawn & Garden" },
+  { key: "pet-supplies",          name: "Pet Supplies",          csv: "Pet Supplies.csv",          imgDir: "images/Pet Supplies" },
+  { key: "sports-outdoors",       name: "Sports & Outdoors",     csv: "Sports & Outdoors.csv",     imgDir: "images/Sports & Outdoors" },
+  { key: "tools-home-improvement",name: "Tools & Home Improvement", csv: "Tools & Home Improvement.csv", imgDir: "images/Tools & Home Improvement" },
+  { key: "toys-games",            name: "Toys & Games",          csv: "Toys & Games.csv",          imgDir: "images/Toys & Games" },
+];
+
   ];
 
   function $(id) { return document.getElementById(id); }
@@ -222,8 +224,8 @@
       $('stat').textContent = '加载中...';
       $('title').textContent = `亚马逊新品 · ${cat.name}`;
 
-      const url = encodeURI(cat.csv) + '?v=' + Date.now();
-      const res = await fetch(url);
+      const csvPath = cat.csv.split('/').map(seg => encodeURIComponent(seg)).join('/');
+      const url = csvPath + '?v=' + Date.now();
 
       if (!res.ok) {
         $('stat').innerHTML = `<span class="danger">加载失败：${res.status}</span>`;
@@ -361,3 +363,4 @@
 </script>
 </body>
 </html>
+
