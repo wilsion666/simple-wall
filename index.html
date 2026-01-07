@@ -73,25 +73,26 @@
 <script>
   /**
    * ✅ 你只需要维护这个表
-   * key: URL 里的 cat 参数
-   * name: 页面显示名
-   * csv: CSV 文件路径
-   * imgDir: 图片文件夹（images/xxx）
-   *
-   * 例：images/office-products/B0XXXX.jpg
-   *    office-products.csv
+   * 说明：你的 CSV 当前在【仓库根目录】（不是 articles/），所以 csv 写成 "xxx.csv"
+   * 图片在 images/<类目文件夹>/<ASIN>.jpg，所以 imgDir 写 images/xxx
    */
-   const CATEGORIES = [
-  { key: "industrial-scientific", name: "Industrial & Scientific", csv: "Industrial & Scientific.csv", imgDir: "images/Industrial & Scientific" },
-  { key: "musical-instruments",   name: "Musical Instruments",   csv: "Musical Instruments.csv",   imgDir: "images/Musical Instruments" },
-  { key: "office-products",       name: "Office Products",       csv: "Office Products.csv",       imgDir: "images/Office Products" },
-  { key: "patio-lawn-garden",     name: "Patio, Lawn & Garden",  csv: "Patio, Lawn & Garden.csv",  imgDir: "images/Patio, Lawn & Garden" },
-  { key: "pet-supplies",          name: "Pet Supplies",          csv: "Pet Supplies.csv",          imgDir: "images/Pet Supplies" },
-  { key: "sports-outdoors",       name: "Sports & Outdoors",     csv: "Sports & Outdoors.csv",     imgDir: "images/Sports & Outdoors" },
-  { key: "tools-home-improvement",name: "Tools & Home Improvement", csv: "Tools & Home Improvement.csv", imgDir: "images/Tools & Home Improvement" },
-  { key: "toys-games",            name: "Toys & Games",          csv: "Toys & Games.csv",          imgDir: "images/Toys & Games" },
-];
+  const CATEGORIES = [
+    { key: "industrial-scientific", name: "Industrial & Scientific", csv: "Industrial & Scientific.csv", imgDir: "images/Industrial & Scientific" },
+    { key: "musical-instruments", name: "Musical Instruments", csv: "Musical Instruments.csv", imgDir: "images/Musical Instruments" },
+    { key: "office-products", name: "Office Products", csv: "Office Products.csv", imgDir: "images/Office Products" },
+    { key: "patio-lawn-garden", name: "Patio, Lawn & Garden", csv: "Patio, Lawn & Garden.csv", imgDir: "images/Patio, Lawn & Garden" },
+    { key: "pet-supplies", name: "Pet Supplies", csv: "Pet Supplies.csv", imgDir: "images/Pet Supplies" },
+    { key: "sports-outdoors", name: "Sports & Outdoors", csv: "Sports & Outdoors.csv", imgDir: "images/Sports & Outdoors" },
+    { key: "tools-home-improvement", name: "Tools & Home Improvement", csv: "Tools & Home Improvement.csv", imgDir: "images/Tools & Home Improvement" },
+    { key: "toys-games", name: "Toys & Games", csv: "Toys & Games.csv", imgDir: "images/Toys & Games" },
+  ];
+
   function $(id) { return document.getElementById(id); }
+
+  // ✅ 关键：逐段编码，解决空格、逗号、& 等字符
+  function encodePath(path) {
+    return String(path).split('/').map(seg => encodeURIComponent(seg)).join('/');
+  }
 
   function getParam(name) {
     const u = new URL(location.href);
@@ -114,26 +115,35 @@
     const firstLine = (text.split(/\r?\n/).find(l => l.trim().length) || '');
     const candidates = [',', ';', '\t'];
     let sep = ',', best = -1;
+
     for (const c of candidates) {
       const re = c === '\t' ? /\t/g : new RegExp('\\' + c, 'g');
       const count = (firstLine.match(re) || []).length;
       if (count > best) { best = count; sep = c; }
     }
+
     const rows = [];
     let row = [], cur = '', inQuotes = false;
+
     for (let i = 0; i < text.length; i++) {
-      const ch = text[i], n = text[i + 1];
+      const ch = text[i];
+      const n = text[i + 1];
+
       if (ch === '"' && inQuotes && n === '"') { cur += '"'; i++; continue; }
       if (ch === '"') { inQuotes = !inQuotes; continue; }
+
       if (ch === sep && !inQuotes) { row.push(cur); cur = ''; continue; }
+
       if (!inQuotes && (ch === '\n' || ch === '\r')) {
         if (ch === '\r' && n === '\n') i++;
         if (cur.length || row.length) { row.push(cur); rows.push(row); }
         cur = ''; row = [];
         continue;
       }
+
       cur += ch;
     }
+
     if (cur.length || row.length) { row.push(cur); rows.push(row); }
     return rows.filter(r => r.some(x => String(x).trim() !== ''));
   }
@@ -142,6 +152,7 @@
     const n = Number(String(v).replace(/,/g,'').replace(/\s/g,'').replace(/[^\d.]/g,''));
     return Number.isFinite(n) ? n : 0;
   }
+
   function normalizeHeader(h) {
     return String(h || '').replace(/^\uFEFF/, '').trim().toLowerCase();
   }
@@ -151,6 +162,7 @@
     const esc = (s) => String(s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260">
       <rect width="260" height="260" fill="#f2f2f2"/>
       <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
@@ -162,8 +174,8 @@
   function imagePath(asin, ext) {
     const cat = getCurrentCategory();
     const safeAsin = encodeURIComponent(asin);
-    // ✅ 这里变成：images/<类目文件夹>/<ASIN>.jpg
-    return `${cat.imgDir}/${safeAsin}.${ext}`;
+    const dir = encodePath(cat.imgDir); // ✅ 目录逐段编码（解决 &）
+    return `${dir}/${safeAsin}.${ext}`;
   }
 
   function warnOnce(key, msg) {
@@ -175,12 +187,14 @@
 
   function handleImageError(img) {
     const asin = img.dataset.asin || '';
+
     if (img.dataset.fallback === 'jpg') {
       img.dataset.fallback = 'png';
       img.src = imagePath(asin, 'png');
       warnOnce(`img:${asin}:jpg`, `[image] missing JPG -> try PNG: ${asin}`);
       return;
     }
+
     if (img.dataset.fallback === 'png') {
       img.dataset.fallback = 'placeholder';
       img.src = placeholderSvg('NO IMAGE');
@@ -196,15 +210,16 @@
   function initCategorySelect() {
     const sel = $('cat');
     sel.innerHTML = '';
+
     for (const c of CATEGORIES) {
       const opt = document.createElement('option');
       opt.value = c.key;
       opt.textContent = c.name;
       sel.appendChild(opt);
     }
+
     const cur = getCurrentCategory();
     sel.value = cur.key;
-
     $('title').textContent = `亚马逊新品 · ${cur.name}`;
 
     sel.addEventListener('change', () => {
@@ -221,13 +236,14 @@
       $('stat').textContent = '加载中...';
       $('title').textContent = `亚马逊新品 · ${cat.name}`;
 
-      const csvPath = cat.csv.split('/').map(seg => encodeURIComponent(seg)).join('/');
-      const url = csvPath + '?v=' + Date.now();
+      // ✅ CSV 路径逐段编码（解决空格、&）
+      const url = encodePath(cat.csv) + '?v=' + Date.now();
+      const res = await fetch(url);
 
       if (!res.ok) {
         $('stat').innerHTML = `<span class="danger">加载失败：${res.status}</span>`;
-        $('hint').innerHTML = `<span class="danger">请确认存在：${cat.csv}（必须是 CSV 文本）</span>`;
-        console.error('[csv] fetch failed', res.status, res.statusText);
+        $('hint').innerHTML = `<span class="danger">请确认存在：${cat.csv}（CSV 文本）</span>`;
+        console.error('[csv] fetch failed', res.status, res.statusText, url);
         return;
       }
 
@@ -268,8 +284,10 @@
       page = 1;
       render();
     } catch (e) {
-      $('stat').innerHTML = `<span class="danger">加载异常</span>`;
-      $('hint').innerHTML = `<span class="danger">请打开控制台查看错误</span>`;
+      // ✅ 直接把具体错误显示出来
+      const msg = (e && e.message) ? e.message : String(e);
+      $('stat').innerHTML = `<span class="danger">加载异常：${msg}</span>`;
+      $('hint').innerHTML = `<span class="danger">请看 Console / Network</span>`;
       console.error('[load] error', e);
     }
   }
@@ -360,5 +378,3 @@
 </script>
 </body>
 </html>
-
-
