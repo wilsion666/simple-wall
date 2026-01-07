@@ -4,25 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>亚马逊新品</title>
-  <div class="top-actions">
-  <a class="nav-btn primary" href="/">去看亚马逊新品</a>
-  
-    
-    <a class="nav-btn" href="/articles/">看文章</a>
-  
-    
-    <a href="/1688.html">1688</a>
-
-
-    <a class="nav-btn" href="/tiktok.html">TikTok</a>
-
-</div>
   <style>
     body { font-family: Arial, sans-serif; background:#fafafa; padding:20px; }
     h2 { margin: 0 0 12px; }
+    .top-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+    .nav-btn { padding:8px 10px; border:1px solid #ddd; border-radius:10px; background:#fff; text-decoration:none; color:#333; }
+    .nav-btn.primary { background:#111; color:#fff; border-color:#111; }
+
     .bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0 16px; }
     input, select, button { padding:8px 10px; border:1px solid #ddd; border-radius:8px; background:#fff; }
     button { cursor:pointer; }
+
     .wrap { display:flex; gap:16px; flex-wrap:wrap; align-items:stretch; }
     .card { width:260px; background:#fff; border-radius:12px; padding:10px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
     .imgbox { border-radius:10px; overflow:hidden; background:#f2f2f2; }
@@ -39,9 +31,18 @@
 </head>
 
 <body>
-  <h2>亚马逊新品</h2>
+  <div class="top-actions">
+    <a class="nav-btn primary" href="/">去看亚马逊新品</a>
+    <a class="nav-btn" href="/articles/">看文章</a>
+    <a class="nav-btn" href="/1688.html">1688</a>
+    <a class="nav-btn" href="/tiktok.html">TikTok</a>
+  </div>
+
+  <h2 id="title">亚马逊新品</h2>
 
   <div class="bar">
+    <select id="cat"></select>
+
     <input id="q" placeholder="搜索 ASIN" style="min-width:220px;" />
     <select id="sort">
       <option value="salesDesc">按月销量：高→低</option>
@@ -49,11 +50,13 @@
       <option value="asinAsc">按 ASIN：A→Z</option>
       <option value="asinDesc">按 ASIN：Z→A</option>
     </select>
+
     <select id="pageSize">
       <option value="50">每页 50</option>
       <option value="100" selected>每页 100</option>
       <option value="200">每页 200</option>
     </select>
+
     <button id="reload">重新加载</button>
     <span class="muted pill" id="stat">未加载</span>
     <span class="muted" id="hint"></span>
@@ -69,73 +72,86 @@
 
 <script>
   /**
-   * 你只需要关心这两个配置：
-   * 1) CSV 文件名（在仓库根目录）
-   * 2) 图片目录（在仓库根目录下的 images 文件夹）
+   * ✅ 你只需要维护这个表
+   * key: URL 里的 cat 参数
+   * name: 页面显示名
+   * csv: CSV 文件路径（强烈建议放 articles/ 里）
+   * imgDir: 图片文件夹（images/xxx）
+   *
+   * 例：images/office-products/B0XXXX.jpg
+   *    articles/office-products.csv
    */
-  const CSV_FILE = 'men sunglasses-top10.csv'; // 你的 CSV 文件名（带空格也没问题）
-  const IMAGE_DIR = 'images';                  // 你的图片目录：/images/ASIN.jpg
+  const CATEGORIES = [
+    { key: "industrial-scientific", name: "Industrial & Scientific", csv: "articles/industrial-scientific.csv", imgDir: "images/Industrial & Scientific" },
+    { key: "musical-instruments", name: "Musical Instruments", csv: "articles/musical-instruments.csv", imgDir: "images/Musical Instruments" },
+    { key: "office-products", name: "Office Products", csv: "articles/office-products.csv", imgDir: "images/Office Products" },
+    { key: "patio-lawn-garden", name: "Patio, Lawn & Garden", csv: "articles/patio-lawn-garden.csv", imgDir: "images/Patio, Lawn & Garden" },
+    { key: "pet-supplies", name: "Pet Supplies", csv: "articles/pet-supplies.csv", imgDir: "images/Pet Supplies" },
+    { key: "sports-outdoors", name: "Sports & Outdoors", csv: "articles/sports-outdoors.csv", imgDir: "images/Sports & Outdoors" },
+    { key: "tools-home-improvement", name: "Tools & Home Improvement", csv: "articles/tools-home-improvement.csv", imgDir: "images/Tools & Home Improvement" },
+    { key: "toys-games", name: "Toys & Games", csv: "articles/toys-games.csv", imgDir: "images/Toys & Games" },
+  ];
 
-  // ---------------- CSV 解析（自动识别分隔符：逗号/分号/Tab，兼容 BOM） ----------------
+  function $(id) { return document.getElementById(id); }
+
+  function getParam(name) {
+    const u = new URL(location.href);
+    return u.searchParams.get(name);
+  }
+  function setParam(name, value) {
+    const u = new URL(location.href);
+    u.searchParams.set(name, value);
+    history.replaceState({}, "", u.toString());
+  }
+
+  function getCurrentCategory() {
+    const catKey = getParam("cat") || CATEGORIES[0]?.key;
+    return CATEGORIES.find(x => x.key === catKey) || CATEGORIES[0];
+  }
+
+  // ---------------- CSV 解析（自动识别分隔符，兼容 BOM） ----------------
   function parseCSV(text) {
-    text = text.replace(/^\uFEFF/, ''); // 去掉 UTF-8 BOM
-
+    text = text.replace(/^\uFEFF/, '');
     const firstLine = (text.split(/\r?\n/).find(l => l.trim().length) || '');
     const candidates = [',', ';', '\t'];
     let sep = ',', best = -1;
-
     for (const c of candidates) {
       const re = c === '\t' ? /\t/g : new RegExp('\\' + c, 'g');
       const count = (firstLine.match(re) || []).length;
       if (count > best) { best = count; sep = c; }
     }
-
     const rows = [];
     let row = [], cur = '', inQuotes = false;
-
     for (let i = 0; i < text.length; i++) {
-      const ch = text[i];
-      const n = text[i + 1];
-
+      const ch = text[i], n = text[i + 1];
       if (ch === '"' && inQuotes && n === '"') { cur += '"'; i++; continue; }
       if (ch === '"') { inQuotes = !inQuotes; continue; }
-
       if (ch === sep && !inQuotes) { row.push(cur); cur = ''; continue; }
-
-      // 处理换行：\r\n 或 \n 或 \r
       if (!inQuotes && (ch === '\n' || ch === '\r')) {
-        if (ch === '\r' && n === '\n') i++; // 吃掉 \r\n
+        if (ch === '\r' && n === '\n') i++;
         if (cur.length || row.length) { row.push(cur); rows.push(row); }
         cur = ''; row = [];
         continue;
       }
-
       cur += ch;
     }
-
     if (cur.length || row.length) { row.push(cur); rows.push(row); }
     return rows.filter(r => r.some(x => String(x).trim() !== ''));
   }
 
   function toNum(v) {
-    // 兼容 "6,013" / "6 013" / "$6,013" 这种
     const n = Number(String(v).replace(/,/g,'').replace(/\s/g,'').replace(/[^\d.]/g,''));
     return Number.isFinite(n) ? n : 0;
   }
-
   function normalizeHeader(h) {
     return String(h || '').replace(/^\uFEFF/, '').trim().toLowerCase();
   }
 
-  // ---------------- 图片兜底：JPG -> PNG -> 占位图（并且控制台只提示一次） ----------------
+  // ---------------- 图片兜底：JPG -> PNG -> 占位图 ----------------
   function placeholderSvg(text = 'NO IMAGE') {
     const esc = (s) => String(s)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
-      .replace(/'/g,'&apos;');
-
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260">
       <rect width="260" height="260" fill="#f2f2f2"/>
       <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
@@ -145,8 +161,10 @@
   }
 
   function imagePath(asin, ext) {
-    const safe = encodeURIComponent(asin);
-    return `${IMAGE_DIR}/${safe}.${ext}`;
+    const cat = getCurrentCategory();
+    const safeAsin = encodeURIComponent(asin);
+    // ✅ 这里变成：images/<类目文件夹>/<ASIN>.jpg
+    return `${cat.imgDir}/${safeAsin}.${ext}`;
   }
 
   function warnOnce(key, msg) {
@@ -158,59 +176,74 @@
 
   function handleImageError(img) {
     const asin = img.dataset.asin || '';
-
     if (img.dataset.fallback === 'jpg') {
       img.dataset.fallback = 'png';
       img.src = imagePath(asin, 'png');
       warnOnce(`img:${asin}:jpg`, `[image] missing JPG -> try PNG: ${asin}`);
       return;
     }
-
     if (img.dataset.fallback === 'png') {
       img.dataset.fallback = 'placeholder';
       img.src = placeholderSvg('NO IMAGE');
       warnOnce(`img:${asin}:png`, `[image] missing PNG -> placeholder: ${asin}`);
       return;
     }
-
-    // placeholder 还失败（极少见），就别继续了
-    warnOnce(`img:${asin}:placeholder`, `[image] placeholder failed: ${asin}`);
   }
 
   // ---------------- 页面状态 & 渲染 ----------------
   let all = [];
   let page = 1;
 
-  function $(id) { return document.getElementById(id); }
+  function initCategorySelect() {
+    const sel = $('cat');
+    sel.innerHTML = '';
+    for (const c of CATEGORIES) {
+      const opt = document.createElement('option');
+      opt.value = c.key;
+      opt.textContent = c.name;
+      sel.appendChild(opt);
+    }
+    const cur = getCurrentCategory();
+    sel.value = cur.key;
+
+    $('title').textContent = `亚马逊新品 · ${cur.name}`;
+
+    sel.addEventListener('change', () => {
+      setParam("cat", sel.value);
+      page = 1;
+      load();
+    });
+  }
 
   async function load() {
+    const cat = getCurrentCategory();
     try {
       $('hint').textContent = '';
       $('stat').textContent = '加载中...';
+      $('title').textContent = `亚马逊新品 · ${cat.name}`;
 
-      // cache bust：避免浏览器缓存老的 CSV
-      const url = encodeURI(CSV_FILE) + '?v=' + Date.now();
+      const url = encodeURI(cat.csv) + '?v=' + Date.now();
       const res = await fetch(url);
 
       if (!res.ok) {
         $('stat').innerHTML = `<span class="danger">加载失败：${res.status}</span>`;
-        $('hint').innerHTML = `<span class="danger">请确认仓库根目录存在：${CSV_FILE}</span>`;
+        $('hint').innerHTML = `<span class="danger">请确认存在：${cat.csv}（必须是 CSV 文本）</span>`;
         console.error('[csv] fetch failed', res.status, res.statusText);
         return;
       }
 
       const text = await res.text();
       const table = parseCSV(text);
+
       if (!table.length) {
         $('stat').innerHTML = `<span class="danger">CSV 为空</span>`;
-        $('hint').innerHTML = `<span class="danger">请检查：${CSV_FILE}</span>`;
+        $('hint').innerHTML = `<span class="danger">请检查：${cat.csv}</span>`;
         return;
       }
 
       const header = table[0].map(h => String(h).replace(/^\uFEFF/, '').trim());
       const headerNorm = header.map(normalizeHeader);
 
-      // 兼容多种列名（你目前用 ASIN / 月销量 就会直接命中）
       const idxASIN =
         headerNorm.findIndex(h => h === 'asin') !== -1
           ? headerNorm.findIndex(h => h === 'asin')
@@ -245,7 +278,6 @@
   function getFiltered() {
     const q = $('q').value.trim().toLowerCase();
     let list = all;
-
     if (q) list = list.filter(x => x.asin.toLowerCase().includes(q));
 
     const sort = $('sort').value;
@@ -256,7 +288,6 @@
       if (sort === 'asinDesc') return b.asin.localeCompare(a.asin);
       return 0;
     });
-
     return list;
   }
 
@@ -320,22 +351,13 @@
   $('q').addEventListener('input', () => { page = 1; render(); });
   $('sort').addEventListener('change', () => { page = 1; render(); });
   $('pageSize').addEventListener('change', () => { page = 1; render(); });
-
   $('prev').addEventListener('click', () => { page = Math.max(1, page - 1); render(); });
   $('next').addEventListener('click', () => { page = page + 1; render(); });
-
   $('reload').addEventListener('click', () => load());
 
   // 初次加载
+  initCategorySelect();
   load();
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
