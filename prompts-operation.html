@@ -63,6 +63,15 @@
       color: #333;
     }
     
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
     textarea {
       width: 100%;
       padding: 10px;
@@ -73,6 +82,64 @@
       min-height: 100px;
       resize: vertical;
       font-family: inherit;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      overflow: auto;
+    }
+    
+    .modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      margin: 0;
+    }
+    
+    .close {
+      color: #999;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .close:hover {
+      color: #111;
+    }
+    
+    .modal-body textarea {
+      min-height: 300px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
     }
     
     button {
@@ -166,14 +233,26 @@
       border-color: #111;
     }
     
-    .prompt-content {
-      color: #333;
-      line-height: 1.6;
-      white-space: pre-wrap;
+    .prompt-title {
+      color: #111;
+      line-height: 1.5;
       margin-bottom: 15px;
-      font-size: 15px;
+      font-size: 16px;
       flex-grow: 1;
-      font-weight: 500;
+      font-weight: 600;
+    }
+    
+    .prompt-content-preview {
+      color: #666;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+      max-height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
     
     .prompt-actions {
@@ -228,43 +307,141 @@
   <div class="add-section">
     <h3 style="margin-top: 0;">添加新提示词</h3>
     <div class="form-group">
-      <label for="newPrompt">提示词内容：</label>
-      <textarea id="newPrompt" placeholder="输入提示词内容..."></textarea>
+      <label for="newPromptTitle">提示词名称：</label>
+      <input type="text" id="newPromptTitle" placeholder="例如：Bullet Points 评分与诊断" />
+    </div>
+    <div class="form-group">
+      <label for="newPromptContent">提示词内容：</label>
+      <textarea id="newPromptContent" placeholder="输入提示词详细内容..."></textarea>
     </div>
     <button onclick="addPrompt()">添加提示词</button>
   </div>
 
   <div id="prompts"></div>
 
+  <!-- 模态框 -->
+  <div id="promptModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">查看/编辑提示词</h3>
+        <span class="close" onclick="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editPromptTitle">提示词名称：</label>
+          <input type="text" id="editPromptTitle" />
+        </div>
+        <div class="form-group">
+          <label for="editPromptContent">提示词内容：</label>
+          <textarea id="editPromptContent"></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button onclick="savePrompt()">保存</button>
+          <button class="secondary" onclick="copyModalContent()">复制内容</button>
+          <button class="secondary" onclick="closeModal()">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = 'prompts-operation';
     const CATEGORY_NAME = '运营';
 
-    // 预设提示词列表
+    // 预设提示词列表（包含详细内容）
     const DEFAULT_PROMPTS = [
-      'Bullet Points 评分与诊断',
-      '爆款标题公式归纳',
-      '爆款五点 Bullet Points 公式归纳',
-      '写标题',
-      '写5条 Bullet Points',
-      '写 Description',
-      '优化标题',
-      '优化五点',
-      '查关键词是否埋入',
-      '查购买意图是否覆盖',
-      '图片打分'
+      {
+        title: 'Bullet Points 评分与诊断',
+        content: `你是一名🇺🇸美国本土资深 Amazon Listing 文案审核专家。请只基于我提供的内容分析，不要编造未提供的信息。
+
+【A9关键词】：
+【TOP20购买意图短语（COSMO）】：
+【待评估 Bullet Points】：
+（粘贴我的5条 bullets）
+
+请按以下维度评估并给总分（满分10分）：
+合规性（亚马逊政策风险）
+A9 SEO（A9关键词覆盖率% + 是否自然）
+COSMO SEO（购买意图覆盖率% + 是否命中核心意图）
+语法拼写
+可读性（扫读、信息层次、冗余）
+卖点力度（是否参数支撑、是否打动人）
+本土化（美式表达/场景）
+专业可信（避免夸张与虚假承诺）
+情绪表达（共鸣、画面感）
+轻量CTA（不违规的引导）
+
+输出要求：
+Overall Score: X/10
+用表格输出：维度｜评分｜问题点｜修改建议｜风险等级（低/中/高）
+最后给3条"最高优先级修改建议"`
+      },
+      {
+        title: '爆款标题公式归纳',
+        content: ''
+      },
+      {
+        title: '爆款五点 Bullet Points 公式归纳',
+        content: ''
+      },
+      {
+        title: '写标题',
+        content: ''
+      },
+      {
+        title: '写5条 Bullet Points',
+        content: ''
+      },
+      {
+        title: '写 Description',
+        content: ''
+      },
+      {
+        title: '优化标题',
+        content: ''
+      },
+      {
+        title: '优化五点',
+        content: ''
+      },
+      {
+        title: '查关键词是否埋入',
+        content: ''
+      },
+      {
+        title: '查购买意图是否覆盖',
+        content: ''
+      },
+      {
+        title: '图片打分',
+        content: ''
+      }
     ];
+    
+    let currentEditingId = null;
 
     // 从 localStorage 加载数据
     function loadData() {
       const data = localStorage.getItem(STORAGE_KEY);
       if (data) {
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+        // 兼容旧数据格式：如果只有content，转换为新格式
+        return parsed.map(item => {
+          if (!item.title && item.content) {
+            return {
+              id: item.id,
+              title: item.content,
+              content: ''
+            };
+          }
+          return item;
+        });
       }
       // 如果没有数据，初始化预设提示词
-      const initialData = DEFAULT_PROMPTS.map((content, index) => ({
+      const initialData = DEFAULT_PROMPTS.map((prompt, index) => ({
         id: `default-${index}-${Date.now()}`,
-        content: content
+        title: prompt.title,
+        content: prompt.content || ''
       }));
       saveData(initialData);
       return initialData;
@@ -277,21 +454,25 @@
 
     // 添加提示词
     function addPrompt() {
-      const textarea = document.getElementById('newPrompt');
-      const content = textarea.value.trim();
+      const titleInput = document.getElementById('newPromptTitle');
+      const contentTextarea = document.getElementById('newPromptContent');
+      const title = titleInput.value.trim();
+      const content = contentTextarea.value.trim();
       
-      if (!content) {
-        alert('请输入提示词内容');
+      if (!title) {
+        alert('请输入提示词名称');
         return;
       }
 
       const data = loadData();
       data.push({
         id: Date.now().toString(),
+        title: title,
         content: content
       });
       saveData(data);
-      textarea.value = '';
+      titleInput.value = '';
+      contentTextarea.value = '';
       render();
     }
 
@@ -307,22 +488,70 @@
       render();
     }
 
-    // 编辑提示词
+    // 打开编辑模态框
     function editPrompt(promptId) {
       const data = loadData();
       const prompt = data.find(p => p.id === promptId);
       if (prompt) {
-        const newContent = window.prompt('请输入新的提示词内容：', prompt.content);
-        if (newContent !== null && newContent.trim()) {
-          prompt.content = newContent.trim();
-          saveData(data);
-          render();
-        }
+        currentEditingId = promptId;
+        document.getElementById('editPromptTitle').value = prompt.title || '';
+        document.getElementById('editPromptContent').value = prompt.content || '';
+        document.getElementById('modalTitle').textContent = '编辑提示词';
+        document.getElementById('promptModal').style.display = 'block';
+      }
+    }
+    
+    // 保存提示词
+    function savePrompt() {
+      if (currentEditingId === null) return;
+      
+      const titleInput = document.getElementById('editPromptTitle');
+      const contentTextarea = document.getElementById('editPromptContent');
+      const title = titleInput.value.trim();
+      const content = contentTextarea.value.trim();
+      
+      if (!title) {
+        alert('请输入提示词名称');
+        return;
+      }
+      
+      const data = loadData();
+      const prompt = data.find(p => p.id === currentEditingId);
+      if (prompt) {
+        prompt.title = title;
+        prompt.content = content;
+        saveData(data);
+        closeModal();
+        render();
+      }
+    }
+    
+    // 关闭模态框
+    function closeModal() {
+      document.getElementById('promptModal').style.display = 'none';
+      currentEditingId = null;
+    }
+    
+    // 复制模态框内容
+    function copyModalContent() {
+      const content = document.getElementById('editPromptContent').value;
+      copyPrompt(content);
+    }
+    
+    // 点击模态框外部关闭
+    window.onclick = function(event) {
+      const modal = document.getElementById('promptModal');
+      if (event.target === modal) {
+        closeModal();
       }
     }
 
-    // 复制提示词
+    // 复制提示词（复制详细内容）
     function copyPrompt(content) {
+      if (!content) {
+        alert('该提示词还没有详细内容');
+        return;
+      }
       navigator.clipboard.writeText(content).then(() => {
         alert('已复制到剪贴板');
       }).catch(() => {
@@ -349,16 +578,22 @@
       const sectionDiv = document.createElement('div');
       sectionDiv.className = 'prompt-section';
       
-      const promptsHtml = data.map(p => `
+      const promptsHtml = data.map(p => {
+        const title = p.title || p.content || '未命名';
+        const content = p.content || '';
+        const hasContent = content.trim().length > 0;
+        return `
         <div class="prompt-item">
-          <div class="prompt-content">${escapeHtml(p.content)}</div>
+          <div class="prompt-title">${escapeHtml(title)}</div>
+          ${hasContent ? `<div class="prompt-content-preview">${escapeHtml(content.substring(0, 100))}${content.length > 100 ? '...' : ''}</div>` : '<div class="prompt-content-preview" style="color: #999;">暂无详细内容</div>'}
           <div class="prompt-actions">
-            <button class="secondary small" onclick="copyPrompt('${escapeJs(p.content)}')">复制</button>
-            <button class="secondary small" onclick="editPrompt('${p.id}')">编辑</button>
+            ${hasContent ? `<button class="secondary small" onclick="copyPrompt('${escapeJs(content)}')">复制</button>` : ''}
+            <button class="secondary small" onclick="editPrompt('${p.id}')">${hasContent ? '编辑' : '添加内容'}</button>
             <button class="danger small" onclick="deletePrompt('${p.id}')">删除</button>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
       
       sectionDiv.innerHTML = `
         <div class="section-header">
