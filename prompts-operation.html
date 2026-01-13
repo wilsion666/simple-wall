@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GPT Image 1.5 - 提示词</title>
+  <title>运营 - 提示词</title>
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -156,13 +156,6 @@
       margin-top: 10px;
     }
     
-    .add-prompt-form {
-      background: #f9f9f9;
-      border-radius: 8px;
-      padding: 15px;
-      margin-top: 15px;
-    }
-    
     .empty-state {
       text-align: center;
       padding: 40px;
@@ -202,7 +195,7 @@
     <a class="nav-btn" href="/tiktok.html">TikTok</a>
   </div>
 
-  <h2>GPT Image 1.5 - 提示词</h2>
+  <h2>运营 - 提示词</h2>
 
   <div class="add-section">
     <h3 style="margin-top: 0;">添加新提示词</h3>
@@ -216,8 +209,8 @@
   <div id="prompts"></div>
 
   <script>
-    const STORAGE_KEY = 'model-gpt-image-1-5-prompts';
-    const MODEL_NAME = 'GPT Image 1.5';
+    const STORAGE_KEY = 'prompts-operation';
+    const CATEGORY_NAME = '运营';
 
     // 从 localStorage 加载数据
     function loadData() {
@@ -317,7 +310,7 @@
       
       sectionDiv.innerHTML = `
         <div class="section-header">
-          <h3 class="section-title">${MODEL_NAME}</h3>
+          <h3 class="section-title">${CATEGORY_NAME}</h3>
         </div>
         ${promptsHtml}
       `;
