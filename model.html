@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>提示词</title>
+  <title>大模型提示词</title>
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -210,33 +210,18 @@
   <div class="top-actions">
     <a class="nav-btn primary" href="/">去看亚马逊新品</a>
     <a class="nav-btn" href="/articles/">产品开发系列</a>
-    <a class="nav-btn" href="/model.html">大模型</a>
+    <a class="nav-btn" href="/prompts.html">提示词</a>
     <a class="nav-btn" href="/1688.html">1688</a>
     <a class="nav-btn" href="/tiktok.html">TikTok</a>
   </div>
 
-  <h2>提示词</h2>
+  <h2>大模型提示词</h2>
 
-  <div class="add-section">
-    <h3 style="margin-top: 0;">添加新标题</h3>
-    <div class="form-group">
-      <label for="newTitle">标题名称：</label>
-      <input type="text" id="newTitle" placeholder="例如：产品分析提示词" />
-    </div>
-    <button onclick="addNewSection()">添加标题</button>
-  </div>
-  
   <div class="add-section">
     <h3 style="margin-top: 0;">添加子标题</h3>
     <div class="form-group">
-      <label for="parentSection">选择父标题：</label>
-      <select id="parentSection" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
-        <option value="">请选择...</option>
-      </select>
-    </div>
-    <div class="form-group">
       <label for="newSubtitle">子标题名称：</label>
-      <input type="text" id="newSubtitle" placeholder="例如：GPT5.2" />
+      <input type="text" id="newSubtitle" placeholder="例如：Claude" />
     </div>
     <button onclick="addNewSubtitle()">添加子标题</button>
   </div>
@@ -246,49 +231,45 @@
   <script>
     // 从 localStorage 加载数据
     function loadData() {
-      const data = localStorage.getItem('prompts');
-      return data ? JSON.parse(data) : [];
+      const data = localStorage.getItem('model-prompts');
+      if (data) {
+        return JSON.parse(data);
+      }
+      // 如果没有数据，初始化"大模型"标题和子标题
+      const initialData = [{
+        id: 'model-main',
+        title: '大模型',
+        subtitles: [
+          {
+            id: 'gpt52',
+            name: 'GPT5.2',
+            prompts: []
+          },
+          {
+            id: 'gpt4o',
+            name: 'GPT4o',
+            prompts: []
+          },
+          {
+            id: 'gemini3',
+            name: 'gemini3',
+            prompts: []
+          }
+        ]
+      }];
+      saveData(initialData);
+      return initialData;
     }
 
     // 保存数据到 localStorage
     function saveData(data) {
-      localStorage.setItem('prompts', JSON.stringify(data));
-    }
-
-    // 添加新标题
-    function addNewSection() {
-      const titleInput = document.getElementById('newTitle');
-      const title = titleInput.value.trim();
-      
-      if (!title) {
-        alert('请输入标题名称');
-        return;
-      }
-
-      const data = loadData();
-      const newSection = {
-        id: Date.now().toString(),
-        title: title,
-        subtitles: []
-      };
-      
-      data.push(newSection);
-      saveData(data);
-      titleInput.value = '';
-      render();
+      localStorage.setItem('model-prompts', JSON.stringify(data));
     }
     
     // 添加子标题
     function addNewSubtitle() {
-      const parentSelect = document.getElementById('parentSection');
       const subtitleInput = document.getElementById('newSubtitle');
-      const parentId = parentSelect.value;
       const subtitleName = subtitleInput.value.trim();
-      
-      if (!parentId) {
-        alert('请选择父标题');
-        return;
-      }
       
       if (!subtitleName) {
         alert('请输入子标题名称');
@@ -296,7 +277,7 @@
       }
 
       const data = loadData();
-      const section = data.find(s => s.id === parentId);
+      const section = data.find(s => s.id === 'model-main');
       if (section) {
         if (!section.subtitles) {
           section.subtitles = [];
@@ -311,27 +292,15 @@
         render();
       }
     }
-
-    // 删除标题
-    function deleteSection(sectionId) {
-      if (!confirm('确定要删除这个标题及其所有子标题和提示词吗？')) {
-        return;
-      }
-      
-      const data = loadData();
-      const filtered = data.filter(s => s.id !== sectionId);
-      saveData(filtered);
-      render();
-    }
     
     // 删除子标题
-    function deleteSubtitle(sectionId, subtitleId) {
+    function deleteSubtitle(subtitleId) {
       if (!confirm('确定要删除这个子标题及其所有提示词吗？')) {
         return;
       }
       
       const data = loadData();
-      const section = data.find(s => s.id === sectionId);
+      const section = data.find(s => s.id === 'model-main');
       if (section && section.subtitles) {
         section.subtitles = section.subtitles.filter(st => st.id !== subtitleId);
         saveData(data);
@@ -340,8 +309,8 @@
     }
 
     // 添加提示词
-    function addPrompt(sectionId, subtitleId) {
-      const inputId = subtitleId ? `prompt-input-${sectionId}-${subtitleId}` : `prompt-input-${sectionId}`;
+    function addPrompt(subtitleId) {
+      const inputId = `prompt-input-${subtitleId}`;
       const textarea = document.getElementById(inputId);
       const content = textarea.value.trim();
       
@@ -351,76 +320,51 @@
       }
 
       const data = loadData();
-      const section = data.find(s => s.id === sectionId);
+      const section = data.find(s => s.id === 'model-main');
       if (section) {
-        if (subtitleId) {
-          // 添加到子标题
-          const subtitle = section.subtitles?.find(st => st.id === subtitleId);
-          if (subtitle) {
-            if (!subtitle.prompts) subtitle.prompts = [];
-            subtitle.prompts.push({
-              id: Date.now().toString(),
-              content: content
-            });
-          }
-        } else {
-          // 直接添加到标题（兼容旧数据）
-          if (!section.prompts) section.prompts = [];
-          section.prompts.push({
+        const subtitle = section.subtitles?.find(st => st.id === subtitleId);
+        if (subtitle) {
+          if (!subtitle.prompts) subtitle.prompts = [];
+          subtitle.prompts.push({
             id: Date.now().toString(),
             content: content
           });
+          saveData(data);
+          textarea.value = '';
+          render();
         }
-        saveData(data);
-        textarea.value = '';
-        render();
       }
     }
 
     // 删除提示词
-    function deletePrompt(sectionId, promptId, subtitleId) {
+    function deletePrompt(subtitleId, promptId) {
       const data = loadData();
-      const section = data.find(s => s.id === sectionId);
+      const section = data.find(s => s.id === 'model-main');
       if (section) {
-        if (subtitleId) {
-          // 从子标题删除
-          const subtitle = section.subtitles?.find(st => st.id === subtitleId);
-          if (subtitle && subtitle.prompts) {
-            subtitle.prompts = subtitle.prompts.filter(p => p.id !== promptId);
-          }
-        } else {
-          // 从标题删除（兼容旧数据）
-          if (section.prompts) {
-            section.prompts = section.prompts.filter(p => p.id !== promptId);
-          }
+        const subtitle = section.subtitles?.find(st => st.id === subtitleId);
+        if (subtitle && subtitle.prompts) {
+          subtitle.prompts = subtitle.prompts.filter(p => p.id !== promptId);
+          saveData(data);
+          render();
         }
-        saveData(data);
-        render();
       }
     }
 
     // 编辑提示词
-    function editPrompt(sectionId, promptId, subtitleId) {
+    function editPrompt(subtitleId, promptId) {
       const data = loadData();
-      const section = data.find(s => s.id === sectionId);
+      const section = data.find(s => s.id === 'model-main');
       if (section) {
-        let prompt = null;
-        if (subtitleId) {
-          const subtitle = section.subtitles?.find(st => st.id === subtitleId);
-          if (subtitle && subtitle.prompts) {
-            prompt = subtitle.prompts.find(p => p.id === promptId);
-          }
-        } else {
-          if (section.prompts) {
-            prompt = section.prompts.find(p => p.id === promptId);
-          }
-        }
-        if (prompt) {
-          const newContent = window.prompt('请输入新的提示词内容：', prompt.content);
-          if (newContent !== null && newContent.trim()) {
-            prompt.content = newContent.trim();
-            saveData(data);
-            render();
+        const subtitle = section.subtitles?.find(st => st.id === subtitleId);
+        if (subtitle && subtitle.prompts) {
+          const prompt = subtitle.prompts.find(p => p.id === promptId);
+          if (prompt) {
+            const newContent = window.prompt('请输入新的提示词内容：', prompt.content);
+            if (newContent !== null && newContent.trim()) {
+              prompt.content = newContent.trim();
+              saveData(data);
+              render();
+            }
           }
         }
       }
@@ -442,29 +386,13 @@
       });
     }
 
-    // 更新父标题选择器
-    function updateParentSelect() {
-      const select = document.getElementById('parentSection');
-      const data = loadData();
-      select.innerHTML = '<option value="">请选择...</option>';
-      data.forEach(section => {
-        const option = document.createElement('option');
-        option.value = section.id;
-        option.textContent = section.title;
-        select.appendChild(option);
-      });
-    }
-
     // 渲染所有内容
     function render() {
       const data = loadData();
       const container = document.getElementById('sections');
       
-      // 更新父标题选择器
-      updateParentSelect();
-      
       if (data.length === 0) {
-        container.innerHTML = '<div class="empty-state">还没有添加任何标题，请在上方添加一个标题开始使用。</div>';
+        container.innerHTML = '<div class="empty-state">加载中...</div>';
         return;
       }
 
@@ -484,8 +412,8 @@
                   <div class="prompt-content">${escapeHtml(p.content)}</div>
                   <div class="prompt-actions">
                     <button class="secondary small" onclick="copyPrompt('${escapeJs(p.content)}')">复制</button>
-                    <button class="secondary small" onclick="editPrompt('${section.id}', '${p.id}', '${subtitle.id}')">编辑</button>
-                    <button class="danger small" onclick="deletePrompt('${section.id}', '${p.id}', '${subtitle.id}')">删除</button>
+                    <button class="secondary small" onclick="editPrompt('${subtitle.id}', '${p.id}')">编辑</button>
+                    <button class="danger small" onclick="deletePrompt('${subtitle.id}', '${p.id}')">删除</button>
                   </div>
                 </div>
               `).join('')
@@ -496,54 +424,26 @@
                 <div class="subtitle-header">
                   <h4 class="subtitle-title">${escapeHtml(subtitle.name)}</h4>
                   <div class="subtitle-actions">
-                    <button class="danger small" onclick="deleteSubtitle('${section.id}', '${subtitle.id}')">删除子标题</button>
+                    <button class="danger small" onclick="deleteSubtitle('${subtitle.id}')">删除子标题</button>
                   </div>
                 </div>
                 ${promptsHtml}
                 <div class="add-prompt-form">
-                  <label for="prompt-input-${section.id}-${subtitle.id}">添加新提示词：</label>
-                  <textarea id="prompt-input-${section.id}-${subtitle.id}" placeholder="输入提示词内容..."></textarea>
-                  <button class="small" onclick="addPrompt('${section.id}', '${subtitle.id}')">添加提示词</button>
+                  <label for="prompt-input-${subtitle.id}">添加新提示词：</label>
+                  <textarea id="prompt-input-${subtitle.id}" placeholder="输入提示词内容..."></textarea>
+                  <button class="small" onclick="addPrompt('${subtitle.id}')">添加提示词</button>
                 </div>
               </div>
             `;
           }).join('');
         }
         
-        // 兼容旧数据：直接显示在标题下的提示词
-        let directPromptsHtml = '';
-        if (section.prompts && section.prompts.length > 0) {
-          directPromptsHtml = section.prompts.map(p => `
-            <div class="prompt-item">
-              <div class="prompt-content">${escapeHtml(p.content)}</div>
-              <div class="prompt-actions">
-                <button class="secondary small" onclick="copyPrompt('${escapeJs(p.content)}')">复制</button>
-                <button class="secondary small" onclick="editPrompt('${section.id}', '${p.id}')">编辑</button>
-                <button class="danger small" onclick="deletePrompt('${section.id}', '${p.id}')">删除</button>
-              </div>
-            </div>
-          `).join('');
-        }
-        
         sectionDiv.innerHTML = `
           <div class="section-header">
             <h3 class="section-title">${escapeHtml(section.title)}</h3>
-            <div class="section-actions">
-              <button class="danger" onclick="deleteSection('${section.id}')">删除标题</button>
-            </div>
           </div>
           
           ${subtitlesHtml}
-          
-          ${directPromptsHtml}
-          
-          ${!section.subtitles || section.subtitles.length === 0 ? `
-            <div class="add-prompt-form">
-              <label for="prompt-input-${section.id}">添加新提示词：</label>
-              <textarea id="prompt-input-${section.id}" placeholder="输入提示词内容..."></textarea>
-              <button onclick="addPrompt('${section.id}')">添加提示词</button>
-            </div>
-          ` : ''}
         `;
         
         container.appendChild(sectionDiv);
