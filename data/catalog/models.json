@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Gemini 3",
+    "slug": "gemini-3",
+    "storageKey": "model-gemini-3-prompts"
+  },
+  {
+    "name": "GPT Image 1.5",
+    "slug": "gpt-image-1-5",
+    "storageKey": "model-gpt-image-1-5-prompts"
+  },
+  {
+    "name": "Nano Banana Pro",
+    "slug": "nano-banana-pro",
+    "storageKey": "model-nano-banana-pro-prompts"
+  },
+  {
+    "name": "Seedream 4.5",
+    "slug": "seedream-4-5",
+    "storageKey": "model-seedream-4-5-prompts"
+  }
+]

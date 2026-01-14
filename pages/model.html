@@ -216,34 +216,54 @@
   <div id="prompts"></div>
 
   <script>
-    // 模型映射表
-    const MODEL_MAP = {
-      'gemini-3': { name: 'Gemini 3', key: 'model-gemini-3-prompts' },
-      'gpt-image-1-5': { name: 'GPT Image 1.5', key: 'model-gpt-image-1-5-prompts' },
-      'nano-banana-pro': { name: 'Nano Banana Pro', key: 'model-nano-banana-pro-prompts' },
-      'seedream-4-5': { name: 'Seedream 4.5', key: 'model-seedream-4-5-prompts' }
-    };
-
     // 从 URL 参数获取模型标识
     function getModelSlug() {
       const params = new URLSearchParams(window.location.search);
       return params.get('m') || 'gemini-3'; // 默认使用 gemini-3
     }
 
-    // 获取当前模型配置
-    function getCurrentModel() {
-      const slug = getModelSlug();
-      return MODEL_MAP[slug] || MODEL_MAP['gemini-3'];
+    // 模型配置（从 JSON 加载）
+    let MODELS_CONFIG = [];
+    let currentModel = null;
+    let STORAGE_KEY = '';
+    let MODEL_NAME = '';
+
+    // 加载模型配置
+    async function loadModelsConfig() {
+      try {
+        const response = await fetch('/data/catalog/models.json');
+        if (!response.ok) {
+          throw new Error('Failed to load models config');
+        }
+        MODELS_CONFIG = await response.json();
+        
+        // 获取当前模型配置
+        const slug = getModelSlug();
+        currentModel = MODELS_CONFIG.find(m => m.slug === slug) || MODELS_CONFIG[0];
+        
+        if (currentModel) {
+          STORAGE_KEY = currentModel.storageKey;
+          MODEL_NAME = currentModel.name;
+          
+          // 更新页面标题和标题
+          document.getElementById('pageTitle').textContent = `${MODEL_NAME} - 提示词`;
+          document.getElementById('pageHeading').textContent = `${MODEL_NAME} - 提示词`;
+        }
+      } catch (error) {
+        console.error('Error loading models config:', error);
+        // 降级到硬编码配置
+        const fallbackConfig = [
+          { name: 'Gemini 3', slug: 'gemini-3', storageKey: 'model-gemini-3-prompts' }
+        ];
+        MODELS_CONFIG = fallbackConfig;
+        const slug = getModelSlug();
+        currentModel = fallbackConfig.find(m => m.slug === slug) || fallbackConfig[0];
+        STORAGE_KEY = currentModel.storageKey;
+        MODEL_NAME = currentModel.name;
+        document.getElementById('pageTitle').textContent = `${MODEL_NAME} - 提示词`;
+        document.getElementById('pageHeading').textContent = `${MODEL_NAME} - 提示词`;
+      }
     }
-
-    // 初始化模型信息
-    const currentModel = getCurrentModel();
-    const STORAGE_KEY = currentModel.key;
-    const MODEL_NAME = currentModel.name;
-
-    // 更新页面标题和标题
-    document.getElementById('pageTitle').textContent = `${MODEL_NAME} - 提示词`;
-    document.getElementById('pageHeading').textContent = `${MODEL_NAME} - 提示词`;
 
     // 从 localStorage 加载数据
     function loadData() {
@@ -369,7 +389,10 @@
     }
 
     // 初始化
-    render();
+    (async () => {
+      await loadModelsConfig();
+      render();
+    })();
   </script>
 </body>
 </html>

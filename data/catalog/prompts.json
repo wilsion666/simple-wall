@@ -1,0 +1,26 @@
+[
+  {
+    "name": "运营",
+    "slug": "operation",
+    "storageKey": "prompts-operation",
+    "hasDefaultPrompts": true
+  },
+  {
+    "name": "产品开发",
+    "slug": "product",
+    "storageKey": "prompts-product",
+    "hasDefaultPrompts": true
+  },
+  {
+    "name": "广告",
+    "slug": "advertising",
+    "storageKey": "prompts-advertising",
+    "hasDefaultPrompts": false
+  },
+  {
+    "name": "红人",
+    "slug": "influencer",
+    "storageKey": "prompts-influencer",
+    "hasDefaultPrompts": false
+  }
+]

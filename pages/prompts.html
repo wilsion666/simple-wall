@@ -351,12 +351,66 @@
       return params.get('p') || 'operation'; // 默认使用 operation
     }
 
-    // 类别映射表
-    const PROMPT_CATEGORIES = {
-      'operation': { 
-        name: '运营', 
-        key: 'prompts-operation',
-        defaultPrompts: [
+    // 提示词配置（从 JSON 加载）
+    let PROMPTS_CONFIG = [];
+    let currentCategory = null;
+    let STORAGE_KEY = '';
+    let CATEGORY_NAME = '';
+    let DEFAULT_PROMPTS = [];
+
+    // 加载提示词配置
+    async function loadPromptsConfig() {
+      try {
+        const response = await fetch('/data/catalog/prompts.json');
+        if (!response.ok) {
+          throw new Error('Failed to load prompts config');
+        }
+        PROMPTS_CONFIG = await response.json();
+        
+        // 获取当前类别配置
+        const slug = getPromptSlug();
+        currentCategory = PROMPTS_CONFIG.find(p => p.slug === slug) || PROMPTS_CONFIG[0];
+        
+        if (currentCategory) {
+          STORAGE_KEY = currentCategory.storageKey;
+          CATEGORY_NAME = currentCategory.name;
+          
+          // 更新页面标题和标题
+          document.getElementById('pageTitle').textContent = `${CATEGORY_NAME} - 提示词`;
+          document.getElementById('pageHeading').textContent = `${CATEGORY_NAME} - 提示词`;
+          
+          // 如果是运营或产品开发类别，加载预设提示词
+          if (currentCategory.hasDefaultPrompts) {
+            DEFAULT_PROMPTS = getDefaultPrompts(currentCategory.slug);
+          } else {
+            DEFAULT_PROMPTS = [];
+          }
+        }
+      } catch (error) {
+        console.error('Error loading prompts config:', error);
+        // 降级到硬编码配置
+        const fallbackConfig = [
+          { name: '运营', slug: 'operation', storageKey: 'prompts-operation', hasDefaultPrompts: true }
+        ];
+        PROMPTS_CONFIG = fallbackConfig;
+        const slug = getPromptSlug();
+        currentCategory = fallbackConfig.find(p => p.slug === slug) || fallbackConfig[0];
+        STORAGE_KEY = currentCategory.storageKey;
+        CATEGORY_NAME = currentCategory.name;
+        document.getElementById('pageTitle').textContent = `${CATEGORY_NAME} - 提示词`;
+        document.getElementById('pageHeading').textContent = `${CATEGORY_NAME} - 提示词`;
+        DEFAULT_PROMPTS = [];
+      }
+    }
+
+    // 加载预设提示词（从硬编码映射表）
+    function getDefaultPrompts(slug) {
+      return DEFAULT_PROMPTS_MAP[slug] || [];
+    }
+
+    // 预设提示词映射表（保留用于预设提示词）
+    const DEFAULT_PROMPTS_MAP = {
+      'operation': [
       {
         title: 'Bullet Points 评分与诊断',
         content: `你是一名🇺🇸美国本土资深 Amazon Listing 文案审核专家。请只基于我提供的内容分析，不要编造未提供的信息。
@@ -567,12 +621,8 @@
 - 3-5行整体评语（优点 + 最优先的优化动作）
 语气亲切、专业、耐心。`
       }
-      ]
-      },
-      'product': {
-        name: '产品开发',
-        key: 'prompts-product',
-        defaultPrompts: [
+      ],
+      'product': [
           {
             title: '亚马逊产品开发经理',
             content: `你是一名🇺🇸美国亚马逊资深产品开发经理，擅长市场调研、竞品拆解、成本与风险评估。
@@ -604,16 +654,8 @@
           }
         ]
       },
-      'advertising': {
-        name: '广告',
-        key: 'prompts-advertising',
-        defaultPrompts: []
-      },
-      'influencer': {
-        name: '红人',
-        key: 'prompts-influencer',
-        defaultPrompts: []
-      }
+      'advertising': [],
+      'influencer': []
     };
 
     // 获取当前类别配置
@@ -622,15 +664,10 @@
       return PROMPT_CATEGORIES[slug] || PROMPT_CATEGORIES['operation'];
     }
 
-    // 初始化类别信息
-    const currentCategory = getCurrentCategory();
-    const STORAGE_KEY = currentCategory.key;
-    const CATEGORY_NAME = currentCategory.name;
-    const DEFAULT_PROMPTS = currentCategory.defaultPrompts || [];
-
-    // 更新页面标题和标题
-    document.getElementById('pageTitle').textContent = `${CATEGORY_NAME} - 提示词`;
-    document.getElementById('pageHeading').textContent = `${CATEGORY_NAME} - 提示词`;
+    // 获取当前类别配置（已通过 loadPromptsConfig 设置）
+    function getCurrentCategory() {
+      return currentCategory || PROMPTS_CONFIG[0];
+    }
     
     let currentEditingId = null;
 
@@ -652,7 +689,7 @@
         });
       }
       // 如果没有数据且有预设提示词，初始化预设提示词
-      if (DEFAULT_PROMPTS.length === 0) {
+      if (!DEFAULT_PROMPTS || DEFAULT_PROMPTS.length === 0) {
         return [];
       }
       const initialData = DEFAULT_PROMPTS.map((prompt, index) => ({
@@ -842,7 +879,10 @@
     }
 
     // 初始化
-    render();
+    (async () => {
+      await loadPromptsConfig();
+      render();
+    })();
   </script>
 </body>
 </html>
