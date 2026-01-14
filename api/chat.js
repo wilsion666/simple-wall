@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     conversationMessages = [{ role: 'user', content: message }];
   }
 
-  // 调用 DeepSeek API
+  // 调用 DeepSeek API（流式模式）
   try {
     const deepseekResponse = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
@@ -71,11 +71,11 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: conversationMessages,
-        stream: false
+        stream: true  // ✅ 启用流式响应
       })
     });
 
-    // 处理响应
+    // 处理错误响应
     if (!deepseekResponse.ok) {
       const errorText = await deepseekResponse.text();
       let errorData;
@@ -85,7 +85,6 @@ export default async function handler(req, res) {
         errorData = { error: errorText || 'Unknown error' };
       }
 
-      // 根据状态码返回相应错误
       const status = deepseekResponse.status;
       console.error(`[chat] DeepSeek API error ${status}:`, errorData);
 
@@ -96,24 +95,84 @@ export default async function handler(req, res) {
       });
     }
 
-    const data = await deepseekResponse.json();
-    
-    // 提取回复内容
-    const reply = data.choices?.[0]?.message?.content || '';
-    if (!reply) {
-      console.error('[chat] No reply content in DeepSeek response:', data);
-      return res.status(500).json({
-        error: 'No reply content from DeepSeek',
-        code: 'EMPTY_REPLY'
-      });
-    }
+    // 设置 SSE 响应头
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
-    // 返回成功响应
-    return res.status(200).json({
-      reply,
-      usage: data.usage || null,
-      model: data.model || 'deepseek-chat'
-    });
+    // 流式转发 DeepSeek 的响应
+    const reader = deepseekResponse.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          // 处理剩余的 buffer
+          if (buffer.trim()) {
+            const lines = buffer.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6).trim();
+                if (data === '[DONE]') {
+                  res.write('data: [DONE]\n\n');
+                } else {
+                  try {
+                    const parsed = JSON.parse(data);
+                    const delta = parsed.choices?.[0]?.delta;
+                    if (delta?.content) {
+                      res.write(`data: ${JSON.stringify({ content: delta.content, done: false })}\n\n`);
+                    }
+                  } catch (e) {
+                    // 忽略解析错误
+                  }
+                }
+              }
+            }
+          }
+          // 发送完成信号
+          res.write('data: [DONE]\n\n');
+          res.end();
+          break;
+        }
+
+        // 解码数据块
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        
+        // 保留最后一个可能不完整的行
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim(); // 移除 'data: ' 前缀并去除空白
+            
+            // 检查是否结束
+            if (data === '[DONE]') {
+              res.write('data: [DONE]\n\n');
+              res.end();
+              return;
+            }
+
+            try {
+              const parsed = JSON.parse(data);
+              const delta = parsed.choices?.[0]?.delta;
+              
+              if (delta?.content) {
+                // 转发增量内容给前端
+                res.write(`data: ${JSON.stringify({ content: delta.content, done: false })}\n\n`);
+              }
+            } catch (e) {
+              // 忽略解析错误，继续处理下一行
+              console.warn('[chat] Failed to parse SSE data:', e, 'Data:', data);
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
 
   } catch (error) {
     console.error('[chat] Network or parsing error:', error);

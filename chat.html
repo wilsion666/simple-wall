@@ -326,7 +326,7 @@
       }
     }
 
-    // 发送消息
+    // 发送消息（流式版本）
     async function sendMessage() {
       const message = inputEl.value.trim();
       if (!message) return;
@@ -345,11 +345,12 @@
       // 清空输入框
       inputEl.value = '';
 
-      // 添加加载中的 AI 消息
-      const loadingMessage = addMessage('assistant', '思考中...', true);
+      // 添加空的 AI 消息（用于流式更新）
+      const aiMessage = addMessage('assistant', '', true);
+      let fullReply = '';
 
       try {
-        // 调用后端 API
+        // 调用后端 API（流式）
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
@@ -360,38 +361,130 @@
           })
         });
 
-        const data = await response.json();
-
+        // 检查 HTTP 错误状态
         if (!response.ok) {
-          // 处理错误响应
-          let errorMsg = data.error || '请求失败';
-          if (data.code === 'UNAUTHORIZED') {
-            errorMsg = 'API 密钥错误（401）';
-          } else if (data.code === 'RATE_LIMIT') {
-            errorMsg = '请求频率过高，请稍后再试（429）';
-          } else if (data.status >= 500) {
-            errorMsg = `服务器错误（${data.status}）`;
+          // 尝试解析错误响应（可能是 JSON）
+          let errorMsg = '请求失败';
+          try {
+            const errorData = await response.json();
+            errorMsg = errorData.error || '请求失败';
+            if (errorData.code === 'UNAUTHORIZED') {
+              errorMsg = 'API 密钥错误（401）';
+            } else if (errorData.code === 'RATE_LIMIT') {
+              errorMsg = '请求频率过高，请稍后再试（429）';
+            } else if (errorData.status >= 500) {
+              errorMsg = `服务器错误（${errorData.status}）`;
+            }
+          } catch {
+            errorMsg = `服务器错误（${response.status}）`;
           }
           
-          loadingMessage.remove();
+          aiMessage.remove();
           showError(`错误：${errorMsg}`);
-          // 从历史中移除最后一条用户消息（因为失败了）
           conversationHistory.pop();
           return;
         }
 
-        // 更新 AI 消息
-        const reply = data.reply || '无回复内容';
-        updateMessage(loadingMessage, reply);
-        
-        // 添加到对话历史
-        conversationHistory.push({ role: 'assistant', content: reply });
+        // 检查响应类型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('text/event-stream')) {
+          // 非流式响应，尝试解析 JSON
+          try {
+            const data = await response.json();
+            const reply = data.reply || '无回复内容';
+            updateMessage(aiMessage, reply);
+            conversationHistory.push({ role: 'assistant', content: reply });
+          } catch {
+            aiMessage.remove();
+            showError('响应格式错误');
+            conversationHistory.pop();
+          }
+          return;
+        }
+
+        // 流式读取 SSE 响应
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            // 解码数据块
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            
+            // 保留最后一个不完整的行
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6).trim();
+                
+                // 检查是否结束
+                if (data === '[DONE]') {
+                  // 完成，更新最终消息
+                  aiMessage.classList.remove('loading');
+                  conversationHistory.push({ role: 'assistant', content: fullReply });
+                  break;
+                }
+
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.content) {
+                    fullReply += parsed.content;
+                    // 实时更新消息内容
+                    updateMessage(aiMessage, fullReply);
+                    // 自动滚动到底部
+                    messagesEl.scrollTop = messagesEl.scrollHeight;
+                  }
+                } catch (e) {
+                  // 忽略解析错误
+                  console.warn('[chat] Failed to parse SSE data:', e);
+                }
+              }
+            }
+          }
+
+          // 处理剩余的 buffer
+          if (buffer.trim()) {
+            const line = buffer.trim();
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if (data !== '[DONE]') {
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.content) {
+                    fullReply += parsed.content;
+                    updateMessage(aiMessage, fullReply);
+                  }
+                } catch (e) {
+                  console.warn('[chat] Failed to parse final SSE data:', e);
+                }
+              }
+            }
+          }
+
+          // 确保最终状态
+          if (fullReply) {
+            aiMessage.classList.remove('loading');
+            conversationHistory.push({ role: 'assistant', content: fullReply });
+          } else {
+            aiMessage.remove();
+            showError('未收到回复内容');
+            conversationHistory.pop();
+          }
+
+        } finally {
+          reader.releaseLock();
+        }
 
       } catch (error) {
         // 网络错误或其他异常
-        loadingMessage.remove();
+        aiMessage.remove();
         showError(`网络错误：${error.message}`);
-        // 从历史中移除最后一条用户消息
         conversationHistory.pop();
         console.error('[chat] Error:', error);
       } finally {
