@@ -43,21 +43,78 @@ export default async function handler(req, res) {
     });
   }
 
-  const { message, messages = [] } = body;
+  const { message, messages = [], template, asin, title, category } = body;
 
-  // 验证输入
-  if (!message && (!messages || messages.length === 0)) {
-    return res.status(400).json({ 
-      error: 'Missing required field: message or messages',
-      code: 'MISSING_MESSAGE'
-    });
-  }
+  // ========== 模板模式：如果提供了 template + asin ==========
+  let conversationMessages = [];
+  
+  if (template && asin) {
+    // 模板模式：根据 template 生成 system 和 user 消息
+    const asinInfo = `ASIN: ${asin}${title ? `\n产品标题: ${title}` : ''}${category ? `\n类目: ${category}` : ''}`;
+    
+    if (template === 'plan') {
+      // 模板一：产品开发方案
+      conversationMessages = [
+        {
+          role: 'system',
+          content: `你是一位专业的产品开发顾问。请根据提供的 ASIN 信息，分析该产品并生成详细的产品开发方案。输出格式要求结构化、清晰，包含以下部分：
 
-  // 构建消息列表
-  // 如果提供了单条 message，转换为 messages 格式
-  let conversationMessages = messages;
-  if (message && messages.length === 0) {
-    conversationMessages = [{ role: 'user', content: message }];
+1. **JTBD (Jobs To Be Done)** - 用户购买此产品要完成的任务
+2. **目标人群** - 详细描述目标用户画像
+3. **差异化方向** - 3-5 个可行的产品差异化方向
+4. **核心卖点** - 提炼 3-5 个核心卖点
+5. **风险点** - 识别潜在的市场、产品、运营风险
+6. **上新动作清单** - 具体的产品开发、上架、运营动作清单（分阶段）
+
+请确保输出专业、实用、可执行。`
+        },
+        {
+          role: 'user',
+          content: `请为以下产品生成产品开发方案：\n\n${asinInfo}`
+        }
+      ];
+    } else if (template === 'ads') {
+      // 模板二：广告与文案方案
+      conversationMessages = [
+        {
+          role: 'system',
+          content: `你是一位专业的亚马逊广告和文案优化专家。请根据提供的 ASIN 信息，生成完整的广告与文案方案。输出格式要求结构化、清晰，包含以下部分：
+
+1. **标题（3条）** - 提供 3 条不同风格的标题，每条不超过 200 字符
+2. **五点描述** - 5 个卖点的详细描述，每个卖点 1-2 句话
+3. **Search Terms** - 搜索词建议（用逗号分隔，不超过 250 字符）
+4. **关键词分组**：
+   - 大词（高搜索量、高竞争度）
+   - 小词（长尾词、低竞争度）
+5. **否定词建议** - 建议添加到否定关键词列表的词
+
+请确保输出专业、符合亚马逊 SEO 最佳实践。`
+        },
+        {
+          role: 'user',
+          content: `请为以下产品生成广告与文案方案：\n\n${asinInfo}`
+        }
+      ];
+    } else {
+      return res.status(400).json({
+        error: `Unknown template: ${template}. Supported templates: plan, ads`,
+        code: 'INVALID_TEMPLATE'
+      });
+    }
+  } else {
+    // 原有逻辑：兼容 message/messages 格式
+    if (!message && (!messages || messages.length === 0)) {
+      return res.status(400).json({ 
+        error: 'Missing required field: message or messages, or template+asin',
+        code: 'MISSING_MESSAGE'
+      });
+    }
+
+    // 构建消息列表
+    conversationMessages = messages;
+    if (message && messages.length === 0) {
+      conversationMessages = [{ role: 'user', content: message }];
+    }
   }
 
   // 调用 DeepSeek API（流式模式）
@@ -90,7 +147,7 @@ export default async function handler(req, res) {
 
       return res.status(status).json({
         error: errorData.error?.message || errorData.error || 'DeepSeek API error',
-        code: status === 401 ? 'UNAUTHORIZED' : status === 429 ? 'RATE_LIMIT' : 'API_ERROR',
+        code: status === 401 ? 'UNAUTHORIZED' : status === 402 ? 'PAYMENT_REQUIRED' : status === 429 ? 'RATE_LIMIT' : 'API_ERROR',
         status
       });
     }

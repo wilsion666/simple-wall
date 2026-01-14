@@ -36,6 +36,9 @@
     .muted { color:#666; font-size:13px; }
     .pill { padding:6px 10px; border:1px solid #eee; border-radius:999px; background:#fff; }
     .danger { color:#b00020; }
+    .action-buttons { margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; }
+    .action-btn { padding:6px 12px; border:1px solid #0066cc; border-radius:6px; background:#fff; color:#0066cc; text-decoration:none; font-size:12px; cursor:pointer; transition:all 0.2s; }
+    .action-btn:hover { background:#0066cc; color:#fff; }
   </style>
 </head>
 
@@ -381,10 +384,20 @@
 
       const meta = document.createElement('div');
       meta.className = 'meta';
+      
+      const cat = getCurrentCategory();
+      const title = ''; // 如果有标题字段可以在这里获取
+      const catName = encodeURIComponent(cat.name);
+      const asinEncoded = encodeURIComponent(asin);
+      
       meta.innerHTML = `
         <div class="asin">ASIN：${asin}</div>
         <div class="sales">月销量：${x.monthlySales.toLocaleString()}</div>
         <div><a href="${url}" target="_blank" rel="noopener">打开亚马逊</a></div>
+        <div class="action-buttons">
+          <a href="/chat.html?tpl=plan&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成产品方案</a>
+          <a href="/chat.html?tpl=ads&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成图片方案</a>
+        </div>
       `;
       card.appendChild(meta);
 
