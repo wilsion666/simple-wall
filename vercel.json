@@ -2,11 +2,20 @@
   "rewrites": [
     { "source": "/wall", "destination": "/" },
     { "source": "/wall/", "destination": "/" },
-
-    { "source": "/1688", "destination": "/1688.html" },
-    { "source": "/1688/", "destination": "/1688.html" }
+    { "source": "/1688", "destination": "/pages/1688.html" },
+    { "source": "/1688/", "destination": "/pages/1688.html" }
+  ],
+  "redirects": [
+    { "source": "/model-gemini-3.html", "destination": "/pages/model.html?m=gemini-3", "permanent": true },
+    { "source": "/model-gpt-image-1.5.html", "destination": "/pages/model.html?m=gpt-image-1-5", "permanent": true },
+    { "source": "/model-nano-banana-pro.html", "destination": "/pages/model.html?m=nano-banana-pro", "permanent": true },
+    { "source": "/model-seedream-4.5.html", "destination": "/pages/model.html?m=seedream-4-5", "permanent": true },
+    { "source": "/prompts-operation.html", "destination": "/pages/prompts.html?p=operation", "permanent": true },
+    { "source": "/prompts-product.html", "destination": "/pages/prompts.html?p=product", "permanent": true },
+    { "source": "/prompts-advertising.html", "destination": "/pages/prompts.html?p=advertising", "permanent": true },
+    { "source": "/prompts-influencer.html", "destination": "/pages/prompts.html?p=influencer", "permanent": true },
+    { "source": "/1688.html", "destination": "/pages/1688.html", "permanent": true },
+    { "source": "/tiktok.html", "destination": "/pages/tiktok.html", "permanent": true },
+    { "source": "/chat.html", "destination": "/pages/chat.html", "permanent": true }
   ]
 }
-
-
-

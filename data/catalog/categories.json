@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Industrial & Scientific",
+    "slug": "industrial-scientific",
+    "csvPath": "data/csv/categories/industrial-scientific.csv",
+    "imageDir": "images/Industrial & Scientific"
+  },
+  {
+    "name": "Musical Instruments",
+    "slug": "musical-instruments",
+    "csvPath": "data/csv/categories/musical-instruments.csv",
+    "imageDir": "images/Musical Instruments"
+  },
+  {
+    "name": "Office Products",
+    "slug": "office-products",
+    "csvPath": "data/csv/categories/office-products.csv",
+    "imageDir": "images/Office Products"
+  },
+  {
+    "name": "Patio, Lawn & Garden",
+    "slug": "patio-lawn-garden",
+    "csvPath": "data/csv/categories/patio-lawn-garden.csv",
+    "imageDir": "images/Patio, Lawn & Garden"
+  },
+  {
+    "name": "Pet Supplies",
+    "slug": "pet-supplies",
+    "csvPath": "data/csv/categories/pet-supplies.csv",
+    "imageDir": "images/Pet Supplies"
+  },
+  {
+    "name": "Sports & Outdoors",
+    "slug": "sports-outdoors",
+    "csvPath": "data/csv/categories/sports-outdoors.csv",
+    "imageDir": "images/Sports & Outdoors"
+  },
+  {
+    "name": "Tools & Home Improvement",
+    "slug": "tools-home-improvement",
+    "csvPath": "data/csv/categories/tools-home-improvement.csv",
+    "imageDir": "images/Tools & Home Improvement"
+  },
+  {
+    "name": "Toys & Games",
+    "slug": "toys-games",
+    "csvPath": "data/csv/categories/toys-games.csv",
+    "imageDir": "images/Toys & Games"
+  }
+]

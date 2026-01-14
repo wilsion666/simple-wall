@@ -49,24 +49,24 @@
     <div class="dropdown">
       <a class="nav-btn" href="#">提示词 ▼</a>
       <div class="dropdown-content">
-        <a href="/prompts-operation.html">运营</a>
-        <a href="/prompts-product.html">产品开发</a>
-        <a href="/prompts-advertising.html">广告</a>
-        <a href="/prompts-influencer.html">红人</a>
+        <a href="/pages/prompts.html?p=operation">运营</a>
+        <a href="/pages/prompts.html?p=product">产品开发</a>
+        <a href="/pages/prompts.html?p=advertising">广告</a>
+        <a href="/pages/prompts.html?p=influencer">红人</a>
       </div>
     </div>
     <div class="dropdown">
       <a class="nav-btn" href="#">大模型 ▼</a>
       <div class="dropdown-content">
-        <a href="/model-nano-banana-pro.html">Nano Banana Pro</a>
-        <a href="/model-gpt-image-1.5.html">GPT Image 1.5</a>
-        <a href="/model-seedream-4.5.html">Seedream 4.5</a>
-        <a href="/model-gemini-3.html">Gemini 3</a>
+        <a href="/pages/model.html?m=nano-banana-pro">Nano Banana Pro</a>
+        <a href="/pages/model.html?m=gpt-image-1-5">GPT Image 1.5</a>
+        <a href="/pages/model.html?m=seedream-4-5">Seedream 4.5</a>
+        <a href="/pages/model.html?m=gemini-3">Gemini 3</a>
       </div>
     </div>
-    <a class="nav-btn" href="/1688.html">1688</a>
-    <a class="nav-btn" href="/tiktok.html">TikTok</a>
-    <a class="nav-btn" href="/chat.html">DeepSeek 对话</a>
+    <a class="nav-btn" href="/pages/1688.html">1688</a>
+    <a class="nav-btn" href="/pages/tiktok.html">TikTok</a>
+    <a class="nav-btn" href="/pages/chat.html">DeepSeek 对话</a>
   </div>
 
   <h2 id="title">亚马逊新品</h2>
@@ -108,14 +108,14 @@
    * 图片在 images/<类目文件夹>/<ASIN>.jpg，所以 imgDir 写 images/xxx
    */
   const CATEGORIES = [
-    { key: "industrial-scientific", name: "Industrial & Scientific", csv: "Industrial & Scientific.csv", imgDir: "images/Industrial & Scientific" },
-    { key: "musical-instruments", name: "Musical Instruments", csv: "Musical Instruments.csv", imgDir: "images/Musical Instruments" },
-    { key: "office-products", name: "Office Products", csv: "Office Products.csv", imgDir: "images/Office Products" },
-    { key: "patio-lawn-garden", name: "Patio, Lawn & Garden", csv: "Patio, Lawn & Garden.csv", imgDir: "images/Patio, Lawn & Garden" },
-    { key: "pet-supplies", name: "Pet Supplies", csv: "Pet Supplies.csv", imgDir: "images/Pet Supplies" },
-    { key: "sports-outdoors", name: "Sports & Outdoors", csv: "Sports & Outdoors.csv", imgDir: "images/Sports & Outdoors" },
-    { key: "tools-home-improvement", name: "Tools & Home Improvement", csv: "Tools & Home Improvement.csv", imgDir: "images/Tools & Home Improvement" },
-    { key: "toys-games", name: "Toys & Games", csv: "Toys & Games.csv", imgDir: "images/Toys & Games" },
+    { key: "industrial-scientific", name: "Industrial & Scientific", csv: "data/csv/categories/industrial-scientific.csv", imgDir: "images/Industrial & Scientific" },
+    { key: "musical-instruments", name: "Musical Instruments", csv: "data/csv/categories/musical-instruments.csv", imgDir: "images/Musical Instruments" },
+    { key: "office-products", name: "Office Products", csv: "data/csv/categories/office-products.csv", imgDir: "images/Office Products" },
+    { key: "patio-lawn-garden", name: "Patio, Lawn & Garden", csv: "data/csv/categories/patio-lawn-garden.csv", imgDir: "images/Patio, Lawn & Garden" },
+    { key: "pet-supplies", name: "Pet Supplies", csv: "data/csv/categories/pet-supplies.csv", imgDir: "images/Pet Supplies" },
+    { key: "sports-outdoors", name: "Sports & Outdoors", csv: "data/csv/categories/sports-outdoors.csv", imgDir: "images/Sports & Outdoors" },
+    { key: "tools-home-improvement", name: "Tools & Home Improvement", csv: "data/csv/categories/tools-home-improvement.csv", imgDir: "images/Tools & Home Improvement" },
+    { key: "toys-games", name: "Toys & Games", csv: "data/csv/categories/toys-games.csv", imgDir: "images/Toys & Games" },
   ];
 
   function $(id) { return document.getElementById(id); }
@@ -395,8 +395,8 @@
         <div class="sales">月销量：${x.monthlySales.toLocaleString()}</div>
         <div><a href="${url}" target="_blank" rel="noopener">打开亚马逊</a></div>
         <div class="action-buttons">
-          <a href="/chat.html?tpl=plan&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成产品方案</a>
-          <a href="/chat.html?tpl=ads&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成图片方案</a>
+          <a href="/pages/chat.html?tpl=plan&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成产品方案</a>
+          <a href="/pages/chat.html?tpl=ads&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成图片方案</a>
         </div>
       `;
       card.appendChild(meta);
