@@ -63,6 +63,15 @@
       color: #333;
     }
     
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
     textarea {
       width: 100%;
       padding: 10px;
@@ -73,6 +82,64 @@
       min-height: 100px;
       resize: vertical;
       font-family: inherit;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      overflow: auto;
+    }
+    
+    .modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      margin: 0;
+    }
+    
+    .close {
+      color: #999;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .close:hover {
+      color: #111;
+    }
+    
+    .modal-body textarea {
+      min-height: 300px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
     }
     
     button {
@@ -123,7 +190,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       padding-bottom: 15px;
       border-bottom: 2px solid #f0f0f0;
     }
@@ -135,25 +202,65 @@
       margin: 0;
     }
     
-    .prompt-item {
-      background: #f9f9f9;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 10px;
-      border-left: 3px solid #111;
+    .prompts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
     }
     
-    .prompt-content {
-      color: #333;
-      line-height: 1.6;
-      white-space: pre-wrap;
+    @media (max-width: 768px) {
+      .prompts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .prompt-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      min-height: 150px;
+    }
+    
+    .prompt-item:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,.12);
+      transform: translateY(-2px);
+      border-color: #111;
+    }
+    
+    .prompt-title {
+      color: #111;
+      line-height: 1.5;
+      margin-bottom: 15px;
+      font-size: 16px;
+      flex-grow: 1;
+      font-weight: 600;
+    }
+    
+    .prompt-content-preview {
+      color: #666;
+      font-size: 13px;
+      line-height: 1.5;
       margin-bottom: 10px;
+      max-height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
     
     .prompt-actions {
       display: flex;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 15px;
+      border-top: 1px solid #f0f0f0;
     }
     
     .empty-state {
@@ -200,22 +307,107 @@
   <div class="add-section">
     <h3 style="margin-top: 0;">添加新提示词</h3>
     <div class="form-group">
-      <label for="newPrompt">提示词内容：</label>
-      <textarea id="newPrompt" placeholder="输入提示词内容..."></textarea>
+      <label for="newPromptTitle">提示词名称：</label>
+      <input type="text" id="newPromptTitle" placeholder="例如：亚马逊产品开发经理" />
+    </div>
+    <div class="form-group">
+      <label for="newPromptContent">提示词内容：</label>
+      <textarea id="newPromptContent" placeholder="输入提示词详细内容..."></textarea>
     </div>
     <button onclick="addPrompt()">添加提示词</button>
   </div>
 
   <div id="prompts"></div>
 
+  <!-- 模态框 -->
+  <div id="promptModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">查看/编辑提示词</h3>
+        <span class="close" onclick="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editPromptTitle">提示词名称：</label>
+          <input type="text" id="editPromptTitle" />
+        </div>
+        <div class="form-group">
+          <label for="editPromptContent">提示词内容：</label>
+          <textarea id="editPromptContent"></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button onclick="savePrompt()">保存</button>
+          <button class="secondary" onclick="copyModalContent()">复制内容</button>
+          <button class="secondary" onclick="closeModal()">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = 'prompts-product';
     const CATEGORY_NAME = '产品开发';
 
+    // 预设提示词列表（包含详细内容）
+    const DEFAULT_PROMPTS = [
+      {
+        title: '亚马逊产品开发经理',
+        content: `你是一名🇺🇸美国亚马逊资深产品开发经理，擅长市场调研、竞品拆解、成本与风险评估。
+规则：只基于我提供的信息回答；不确定写【未知】；不编造市场规模/份额/营收等数值（如需数据请说明需要的来源类型）。
+
+请输出一份产品开发报告（缺失信息就标注未知）：
+1) 市场概览：趋势/生命周期/旺淡季（结论+依据/需要数据）
+2) 竞争格局：主流价格带、头部卖点、常见差评点、竞争强度
+3) 头部品牌Top（表格）：品牌｜国家｜核心优势｜我可借鉴点
+4) 用户洞察（表格）：TOP购买动机20条｜未满足需求10条｜典型场景/时间
+5) 产品方案建议：我最建议做的1-2个款式（外观/材料/功能/定位/包装）
+6) 成本结构：BOM大项（表格：部件/材料｜作用｜成本占比区间｜风险点）
+7) 合规与侵权风险：宣传词雷区/认证注意点/专利规避方法
+8) 风险清单：从选品-打样-上架-广告-售后各阶段的关键注意点
+9) SWOT + PEST + 进入可行性评分（0-10）与理由`
+      },
+      {
+        title: '市场调研',
+        content: `你是一名🇺🇸美国市场调研专家，专注受众与需求洞察。
+规则：不编造占比/具体数据；没有数据写【未知】并说明需要哪些数据来源。
+
+任务：分析美国目标受众并用表格输出：
+表格字段：维度｜分群结论｜典型特征｜购买驱动（意图）｜常见反对点｜我可用的卖点/文案方向
+维度至少包含：性别｜年龄｜职业/使用场景｜兴趣｜收入｜教育｜家庭情况｜常一起购买的产品
+
+最后补充：
+- 最值得优先切入的2个细分人群 + 理由
+- 建议验证的3个关键假设（用什么数据验证）`
+      }
+    ];
+    
+    let currentEditingId = null;
+
     // 从 localStorage 加载数据
     function loadData() {
       const data = localStorage.getItem(STORAGE_KEY);
-      return data ? JSON.parse(data) : [];
+      if (data) {
+        const parsed = JSON.parse(data);
+        // 兼容旧数据格式：如果只有content，转换为新格式
+        return parsed.map(item => {
+          if (!item.title && item.content) {
+            return {
+              id: item.id,
+              title: item.content,
+              content: ''
+            };
+          }
+          return item;
+        });
+      }
+      // 如果没有数据，初始化预设提示词
+      const initialData = DEFAULT_PROMPTS.map((prompt, index) => ({
+        id: `default-${index}-${Date.now()}`,
+        title: prompt.title,
+        content: prompt.content || ''
+      }));
+      saveData(initialData);
+      return initialData;
     }
 
     // 保存数据到 localStorage
@@ -225,21 +417,25 @@
 
     // 添加提示词
     function addPrompt() {
-      const textarea = document.getElementById('newPrompt');
-      const content = textarea.value.trim();
+      const titleInput = document.getElementById('newPromptTitle');
+      const contentTextarea = document.getElementById('newPromptContent');
+      const title = titleInput.value.trim();
+      const content = contentTextarea.value.trim();
       
-      if (!content) {
-        alert('请输入提示词内容');
+      if (!title) {
+        alert('请输入提示词名称');
         return;
       }
 
       const data = loadData();
       data.push({
         id: Date.now().toString(),
+        title: title,
         content: content
       });
       saveData(data);
-      textarea.value = '';
+      titleInput.value = '';
+      contentTextarea.value = '';
       render();
     }
 
@@ -255,22 +451,70 @@
       render();
     }
 
-    // 编辑提示词
+    // 打开编辑模态框
     function editPrompt(promptId) {
       const data = loadData();
       const prompt = data.find(p => p.id === promptId);
       if (prompt) {
-        const newContent = window.prompt('请输入新的提示词内容：', prompt.content);
-        if (newContent !== null && newContent.trim()) {
-          prompt.content = newContent.trim();
-          saveData(data);
-          render();
-        }
+        currentEditingId = promptId;
+        document.getElementById('editPromptTitle').value = prompt.title || '';
+        document.getElementById('editPromptContent').value = prompt.content || '';
+        document.getElementById('modalTitle').textContent = '编辑提示词';
+        document.getElementById('promptModal').style.display = 'block';
+      }
+    }
+    
+    // 保存提示词
+    function savePrompt() {
+      if (currentEditingId === null) return;
+      
+      const titleInput = document.getElementById('editPromptTitle');
+      const contentTextarea = document.getElementById('editPromptContent');
+      const title = titleInput.value.trim();
+      const content = contentTextarea.value.trim();
+      
+      if (!title) {
+        alert('请输入提示词名称');
+        return;
+      }
+      
+      const data = loadData();
+      const prompt = data.find(p => p.id === currentEditingId);
+      if (prompt) {
+        prompt.title = title;
+        prompt.content = content;
+        saveData(data);
+        closeModal();
+        render();
+      }
+    }
+    
+    // 关闭模态框
+    function closeModal() {
+      document.getElementById('promptModal').style.display = 'none';
+      currentEditingId = null;
+    }
+    
+    // 复制模态框内容
+    function copyModalContent() {
+      const content = document.getElementById('editPromptContent').value;
+      copyPrompt(content);
+    }
+    
+    // 点击模态框外部关闭
+    window.onclick = function(event) {
+      const modal = document.getElementById('promptModal');
+      if (event.target === modal) {
+        closeModal();
       }
     }
 
-    // 复制提示词
+    // 复制提示词（复制详细内容）
     function copyPrompt(content) {
+      if (!content) {
+        alert('该提示词还没有详细内容');
+        return;
+      }
       navigator.clipboard.writeText(content).then(() => {
         alert('已复制到剪贴板');
       }).catch(() => {
@@ -297,22 +541,30 @@
       const sectionDiv = document.createElement('div');
       sectionDiv.className = 'prompt-section';
       
-      const promptsHtml = data.map(p => `
+      const promptsHtml = data.map(p => {
+        const title = p.title || p.content || '未命名';
+        const content = p.content || '';
+        const hasContent = content.trim().length > 0;
+        return `
         <div class="prompt-item">
-          <div class="prompt-content">${escapeHtml(p.content)}</div>
+          <div class="prompt-title">${escapeHtml(title)}</div>
+          ${hasContent ? `<div class="prompt-content-preview">${escapeHtml(content.substring(0, 100))}${content.length > 100 ? '...' : ''}</div>` : '<div class="prompt-content-preview" style="color: #999;">暂无详细内容</div>'}
           <div class="prompt-actions">
-            <button class="secondary small" onclick="copyPrompt('${escapeJs(p.content)}')">复制</button>
-            <button class="secondary small" onclick="editPrompt('${p.id}')">编辑</button>
+            ${hasContent ? `<button class="secondary small" onclick="copyPrompt('${escapeJs(content)}')">复制</button>` : ''}
+            <button class="secondary small" onclick="editPrompt('${p.id}')">${hasContent ? '编辑' : '添加内容'}</button>
             <button class="danger small" onclick="deletePrompt('${p.id}')">删除</button>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
       
       sectionDiv.innerHTML = `
         <div class="section-header">
           <h3 class="section-title">${CATEGORY_NAME}</h3>
         </div>
-        ${promptsHtml}
+        <div class="prompts-grid">
+          ${promptsHtml}
+        </div>
       `;
       
       container.innerHTML = '';
