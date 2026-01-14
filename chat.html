@@ -205,6 +205,28 @@
       font-size: 16px;
     }
 
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .header-btn {
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      color: #666;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .header-btn:hover {
+      background: #f5f5f5;
+      border-color: #999;
+    }
+
     @media (max-width: 768px) {
       .chat-container {
         padding: 12px;
@@ -247,6 +269,10 @@
     <div class="chat-header">
       <h2>DeepSeek 对话</h2>
       <div class="subtitle">与 AI 助手进行对话</div>
+      <div class="header-actions">
+        <button id="clearHistoryBtn" class="header-btn">清空记录</button>
+        <button id="exportHistoryBtn" class="header-btn">导出记录</button>
+      </div>
     </div>
 
     <div id="errorMessage" class="error-message hidden"></div>
@@ -270,9 +296,132 @@
     const inputEl = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
     const errorMessageEl = document.getElementById('errorMessage');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const exportHistoryBtn = document.getElementById('exportHistoryBtn');
 
     // 对话历史（用于上下文）
     let conversationHistory = [];
+
+    // ========== localStorage 管理 ==========
+    // 获取存储 key
+    function getStorageKey() {
+      const params = new URLSearchParams(window.location.search);
+      const asin = params.get('asin') || '';
+      const tpl = params.get('tpl') || '';
+      if (asin && tpl) {
+        return `chat:${asin}:${tpl}`;
+      }
+      return 'chat:default';
+    }
+
+    // 保存消息到 localStorage
+    function saveMessages() {
+      try {
+        const key = getStorageKey();
+        const messagesToSave = conversationHistory.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          ts: msg.ts || Date.now() // 如果没有时间戳，使用当前时间
+        }));
+        localStorage.setItem(key, JSON.stringify(messagesToSave));
+      } catch (e) {
+        console.warn('[chat] Failed to save messages to localStorage:', e);
+      }
+    }
+
+    // 从 localStorage 恢复消息
+    function loadMessages() {
+      try {
+        const key = getStorageKey();
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          const messages = JSON.parse(saved);
+          if (Array.isArray(messages) && messages.length > 0) {
+            // 恢复 conversationHistory
+            conversationHistory = messages.map(msg => ({
+              role: msg.role,
+              content: msg.content,
+              ts: msg.ts
+            }));
+            
+            // 渲染到界面（不触发保存，因为数据已经是从 localStorage 读取的）
+            messagesEl.innerHTML = '';
+            for (const msg of messages) {
+              // 直接渲染，不通过 addMessage（避免重复保存）
+              const messageDiv = document.createElement('div');
+              messageDiv.className = `message ${msg.role}`;
+              
+              const avatar = document.createElement('div');
+              avatar.className = 'message-avatar';
+              avatar.textContent = msg.role === 'user' ? '你' : 'AI';
+              
+              const contentDiv = document.createElement('div');
+              contentDiv.className = 'message-content';
+              contentDiv.textContent = msg.content;
+              
+              messageDiv.appendChild(avatar);
+              messageDiv.appendChild(contentDiv);
+              messagesEl.appendChild(messageDiv);
+            }
+            // 滚动到底部
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return true;
+          }
+        }
+      } catch (e) {
+        console.warn('[chat] Failed to load messages from localStorage:', e);
+      }
+      return false;
+    }
+
+    // 清空当前会话的记录
+    function clearHistory() {
+      if (confirm('确定要清空当前聊天记录吗？')) {
+        try {
+          const key = getStorageKey();
+          localStorage.removeItem(key);
+          conversationHistory = [];
+          messagesEl.innerHTML = '<div class="empty-state">开始对话吧！在下方输入消息...</div>';
+        } catch (e) {
+          console.warn('[chat] Failed to clear history:', e);
+        }
+      }
+    }
+
+    // 导出当前会话的记录
+    function exportHistory() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const asin = params.get('asin') || 'default';
+        const tpl = params.get('tpl') || 'default';
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const filename = `chat-${asin}-${tpl}-${timestamp}.json`;
+        
+        const dataToExport = {
+          asin: asin,
+          template: tpl,
+          exportTime: new Date().toISOString(),
+          messages: conversationHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            ts: msg.ts
+          }))
+        };
+        
+        const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error('[chat] Failed to export history:', e);
+        showError('导出失败，请重试');
+      }
+    }
 
     // 显示错误信息
     function showError(message) {
@@ -314,6 +463,16 @@
       // 滚动到底部
       messagesEl.scrollTop = messagesEl.scrollHeight;
       
+      // 如果不是加载中状态，保存到 conversationHistory 并持久化
+      if (!isLoading && content) {
+        conversationHistory.push({
+          role: role,
+          content: content,
+          ts: Date.now()
+        });
+        saveMessages();
+      }
+      
       return messageDiv;
     }
 
@@ -323,6 +482,32 @@
       if (contentDiv) {
         contentDiv.textContent = content;
         messageDiv.classList.remove('loading');
+        
+        // 更新 conversationHistory 中最后一条消息（通常是 assistant 的流式更新）
+        if (conversationHistory.length > 0) {
+          const lastMsg = conversationHistory[conversationHistory.length - 1];
+          if (lastMsg.role === 'assistant') {
+            lastMsg.content = content;
+            lastMsg.ts = lastMsg.ts || Date.now();
+            saveMessages();
+          } else {
+            // 如果最后一条不是 assistant，说明是新的 assistant 消息，需要添加
+            conversationHistory.push({
+              role: 'assistant',
+              content: content,
+              ts: Date.now()
+            });
+            saveMessages();
+          }
+        } else {
+          // conversationHistory 为空，添加新的 assistant 消息
+          conversationHistory.push({
+            role: 'assistant',
+            content: content,
+            ts: Date.now()
+          });
+          saveMessages();
+        }
       }
     }
 
@@ -339,14 +524,20 @@
       // 添加用户消息到界面
       addMessage('user', message);
       
-      // 添加到对话历史
-      conversationHistory.push({ role: 'user', content: message });
+      // 添加到对话历史（会在 addMessage 中自动保存）
+      // conversationHistory.push({ role: 'user', content: message }); // 移到 addMessage 中处理
 
       // 清空输入框
       inputEl.value = '';
 
       // 添加空的 AI 消息（用于流式更新）
+      // 注意：isLoading=true 时不会保存，所以需要手动添加一条空消息到 conversationHistory
       const aiMessage = addMessage('assistant', '', true);
+      conversationHistory.push({
+        role: 'assistant',
+        content: '',
+        ts: Date.now()
+      });
       let fullReply = '';
 
       try {
@@ -395,7 +586,7 @@
             const data = await response.json();
             const reply = data.reply || '无回复内容';
             updateMessage(aiMessage, reply);
-            conversationHistory.push({ role: 'assistant', content: reply });
+            // conversationHistory 已在 updateMessage 中更新
           } catch {
             aiMessage.remove();
             showError('响应格式错误');
@@ -427,9 +618,8 @@
                 
                 // 检查是否结束
                 if (data === '[DONE]') {
-                  // 完成，更新最终消息
+                  // 完成，更新最终消息（已在 updateMessage 中保存）
                   aiMessage.classList.remove('loading');
-                  conversationHistory.push({ role: 'assistant', content: fullReply });
                   break;
                 }
 
@@ -469,10 +659,9 @@
             }
           }
 
-          // 确保最终状态
+          // 确保最终状态（已在 updateMessage 中保存）
           if (fullReply) {
             aiMessage.classList.remove('loading');
-            conversationHistory.push({ role: 'assistant', content: fullReply });
           } else {
             aiMessage.remove();
             showError('未收到回复内容');
@@ -513,11 +702,24 @@
       this.style.height = Math.min(this.scrollHeight, 200) + 'px';
     });
 
-    // 页面加载时聚焦输入框
-    inputEl.focus();
+    // ========== 按钮事件监听 ==========
+    clearHistoryBtn.addEventListener('click', clearHistory);
+    exportHistoryBtn.addEventListener('click', exportHistory);
+
+    // ========== 页面加载时恢复历史记录 ==========
+    const hasHistory = loadMessages();
+    
+    // 如果恢复了历史记录，聚焦输入框；否则等待自动执行
+    if (hasHistory) {
+      inputEl.focus();
+    }
 
     // ========== 自动执行逻辑（从 URL 参数读取并自动调用 API） ==========
     async function autoExecuteFromURL() {
+      // 如果已经恢复了历史记录，不自动执行（避免重复）
+      if (hasHistory) {
+        return;
+      }
       const params = new URLSearchParams(window.location.search);
       const tpl = params.get('tpl');
       const asin = params.get('asin');
@@ -532,14 +734,17 @@
       // 构建用户问题显示文本
       const userQuestion = `请为 ASIN: ${asin}${cat ? ` (类目: ${cat})` : ''}${title ? ` (标题: ${title})` : ''} 生成${tpl === 'plan' ? '产品开发方案' : '广告与文案方案'}`;
 
-      // 添加用户消息到界面
+      // 添加用户消息到界面（会自动保存）
       addMessage('user', userQuestion);
-      
-      // 添加到对话历史
-      conversationHistory.push({ role: 'user', content: userQuestion });
 
       // 添加空的 AI 消息（用于流式更新）
+      // 注意：isLoading=true 时不会保存，所以需要手动添加一条空消息到 conversationHistory
       const aiMessage = addMessage('assistant', '', true);
+      conversationHistory.push({
+        role: 'assistant',
+        content: '',
+        ts: Date.now()
+      });
       let fullReply = '';
 
       // 禁用输入和按钮
@@ -595,7 +800,7 @@
             const data = await response.json();
             const reply = data.reply || '无回复内容';
             updateMessage(aiMessage, reply);
-            conversationHistory.push({ role: 'assistant', content: reply });
+            // conversationHistory 已在 updateMessage 中更新
           } catch {
             aiMessage.remove();
             showError('响应格式错误');
@@ -627,9 +832,8 @@
                 
                 // 检查是否结束
                 if (data === '[DONE]') {
-                  // 完成，更新最终消息
+                  // 完成，更新最终消息（已在 updateMessage 中保存）
                   aiMessage.classList.remove('loading');
-                  conversationHistory.push({ role: 'assistant', content: fullReply });
                   break;
                 }
 
@@ -669,10 +873,9 @@
             }
           }
 
-          // 确保最终状态
+          // 确保最终状态（已在 updateMessage 中保存）
           if (fullReply) {
             aiMessage.classList.remove('loading');
-            conversationHistory.push({ role: 'assistant', content: fullReply });
           } else {
             aiMessage.remove();
             showError('未收到回复内容');
@@ -697,11 +900,17 @@
       }
     }
 
-    // 页面加载完成后自动执行
+    // 页面加载完成后自动执行（如果没有历史记录）
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', autoExecuteFromURL);
+      document.addEventListener('DOMContentLoaded', () => {
+        if (!hasHistory) {
+          autoExecuteFromURL();
+        }
+      });
     } else {
-      autoExecuteFromURL();
+      if (!hasHistory) {
+        autoExecuteFromURL();
+      }
     }
   </script>
 </body>
