@@ -304,45 +304,7 @@
 
   <h2>产品开发 - 提示词</h2>
 
-  <div class="add-section">
-    <h3 style="margin-top: 0;">添加新提示词</h3>
-    <div class="form-group">
-      <label for="newPromptTitle">提示词名称：</label>
-      <input type="text" id="newPromptTitle" placeholder="例如：亚马逊产品开发经理" />
-    </div>
-    <div class="form-group">
-      <label for="newPromptContent">提示词内容：</label>
-      <textarea id="newPromptContent" placeholder="输入提示词详细内容..."></textarea>
-    </div>
-    <button onclick="addPrompt()">添加提示词</button>
-  </div>
-
   <div id="prompts"></div>
-
-  <!-- 模态框 -->
-  <div id="promptModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title" id="modalTitle">查看/编辑提示词</h3>
-        <span class="close" onclick="closeModal()">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="editPromptTitle">提示词名称：</label>
-          <input type="text" id="editPromptTitle" />
-        </div>
-        <div class="form-group">
-          <label for="editPromptContent">提示词内容：</label>
-          <textarea id="editPromptContent"></textarea>
-        </div>
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-          <button onclick="savePrompt()">保存</button>
-          <button class="secondary" onclick="copyModalContent()">复制内容</button>
-          <button class="secondary" onclick="closeModal()">取消</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <script>
     const STORAGE_KEY = 'prompts-product';
@@ -380,8 +342,6 @@
 - 建议验证的3个关键假设（用什么数据验证）`
       }
     ];
-    
-    let currentEditingId = null;
 
     // 从 localStorage 加载数据
     function loadData() {
@@ -413,100 +373,6 @@
     // 保存数据到 localStorage
     function saveData(data) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    // 添加提示词
-    function addPrompt() {
-      const titleInput = document.getElementById('newPromptTitle');
-      const contentTextarea = document.getElementById('newPromptContent');
-      const title = titleInput.value.trim();
-      const content = contentTextarea.value.trim();
-      
-      if (!title) {
-        alert('请输入提示词名称');
-        return;
-      }
-
-      const data = loadData();
-      data.push({
-        id: Date.now().toString(),
-        title: title,
-        content: content
-      });
-      saveData(data);
-      titleInput.value = '';
-      contentTextarea.value = '';
-      render();
-    }
-
-    // 删除提示词
-    function deletePrompt(promptId) {
-      if (!confirm('确定要删除这个提示词吗？')) {
-        return;
-      }
-      
-      const data = loadData();
-      const filtered = data.filter(p => p.id !== promptId);
-      saveData(filtered);
-      render();
-    }
-
-    // 打开编辑模态框
-    function editPrompt(promptId) {
-      const data = loadData();
-      const prompt = data.find(p => p.id === promptId);
-      if (prompt) {
-        currentEditingId = promptId;
-        document.getElementById('editPromptTitle').value = prompt.title || '';
-        document.getElementById('editPromptContent').value = prompt.content || '';
-        document.getElementById('modalTitle').textContent = '编辑提示词';
-        document.getElementById('promptModal').style.display = 'block';
-      }
-    }
-    
-    // 保存提示词
-    function savePrompt() {
-      if (currentEditingId === null) return;
-      
-      const titleInput = document.getElementById('editPromptTitle');
-      const contentTextarea = document.getElementById('editPromptContent');
-      const title = titleInput.value.trim();
-      const content = contentTextarea.value.trim();
-      
-      if (!title) {
-        alert('请输入提示词名称');
-        return;
-      }
-      
-      const data = loadData();
-      const prompt = data.find(p => p.id === currentEditingId);
-      if (prompt) {
-        prompt.title = title;
-        prompt.content = content;
-        saveData(data);
-        closeModal();
-        render();
-      }
-    }
-    
-    // 关闭模态框
-    function closeModal() {
-      document.getElementById('promptModal').style.display = 'none';
-      currentEditingId = null;
-    }
-    
-    // 复制模态框内容
-    function copyModalContent() {
-      const content = document.getElementById('editPromptContent').value;
-      copyPrompt(content);
-    }
-    
-    // 点击模态框外部关闭
-    window.onclick = function(event) {
-      const modal = document.getElementById('promptModal');
-      if (event.target === modal) {
-        closeModal();
-      }
     }
 
     // 复制提示词（复制详细内容）
@@ -551,8 +417,6 @@
           ${hasContent ? `<div class="prompt-content-preview">${escapeHtml(content.substring(0, 100))}${content.length > 100 ? '...' : ''}</div>` : '<div class="prompt-content-preview" style="color: #999;">暂无详细内容</div>'}
           <div class="prompt-actions">
             ${hasContent ? `<button class="secondary small" onclick="copyPrompt('${escapeJs(content)}')">复制</button>` : ''}
-            <button class="secondary small" onclick="editPrompt('${p.id}')">${hasContent ? '编辑' : '添加内容'}</button>
-            <button class="danger small" onclick="deletePrompt('${p.id}')">删除</button>
           </div>
         </div>
       `;
