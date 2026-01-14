@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DeepSeek 对话</title>
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
+      background: #fafafa; 
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    
+    .top-actions { 
+      display: flex; 
+      gap: 10px; 
+      flex-wrap: wrap; 
+      align-items: center; 
+      padding: 12px 20px;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .nav-btn { 
+      padding: 8px 10px; 
+      border: 1px solid #ddd; 
+      border-radius: 10px; 
+      background: #fff; 
+      text-decoration: none; 
+      color: #333; 
+      font-size: 14px;
+    }
+    
+    .nav-btn.primary { 
+      background: #111; 
+      color: #fff; 
+      border-color: #111; 
+    }
+    
+    .nav-btn:hover {
+      background: #f5f5f5;
+    }
+    
+    .nav-btn.primary:hover {
+      background: #333;
+    }
+
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .chat-header {
+      margin-bottom: 20px;
+    }
+
+    .chat-header h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      color: #111;
+    }
+
+    .chat-header .subtitle {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 0;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .message.user {
+      flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .message.user .message-avatar {
+      background: #111;
+      color: #fff;
+    }
+
+    .message.assistant .message-avatar {
+      background: #0066cc;
+      color: #fff;
+    }
+
+    .message-content {
+      flex: 1;
+      background: #fff;
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      line-height: 1.6;
+      color: #333;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .message.user .message-content {
+      background: #111;
+      color: #fff;
+    }
+
+    .message.loading .message-content {
+      color: #999;
+      font-style: italic;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 10px;
+      padding: 16px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .input-area textarea {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      min-height: 44px;
+      max-height: 200px;
+      line-height: 1.5;
+    }
+
+    .input-area textarea:focus {
+      outline: none;
+      border-color: #0066cc;
+    }
+
+    .input-area button {
+      padding: 12px 24px;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .input-area button:hover:not(:disabled) {
+      background: #333;
+    }
+
+    .input-area button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c00;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border: 1px solid #fcc;
+      font-size: 14px;
+    }
+
+    .error-message.hidden {
+      display: none;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #999;
+      padding: 60px 20px;
+      font-size: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .chat-container {
+        padding: 12px;
+      }
+      
+      .top-actions {
+        padding: 10px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-actions">
+    <a class="nav-btn primary" href="/">去看亚马逊新品</a>
+    <a class="nav-btn" href="/articles/">产品开发系列</a>
+    <div class="dropdown">
+      <a class="nav-btn" href="#">提示词 ▼</a>
+      <div class="dropdown-content">
+        <a href="/prompts-operation.html">运营</a>
+        <a href="/prompts-product.html">产品开发</a>
+        <a href="/prompts-advertising.html">广告</a>
+        <a href="/prompts-influencer.html">红人</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a class="nav-btn" href="#">大模型 ▼</a>
+      <div class="dropdown-content">
+        <a href="/model-nano-banana-pro.html">Nano Banana Pro</a>
+        <a href="/model-gpt-image-1.5.html">GPT Image 1.5</a>
+        <a href="/model-seedream-4.5.html">Seedream 4.5</a>
+        <a href="/model-gemini-3.html">Gemini 3</a>
+      </div>
+    </div>
+    <a class="nav-btn" href="/1688.html">1688</a>
+    <a class="nav-btn" href="/tiktok.html">TikTok</a>
+    <a class="nav-btn" href="/chat.html">DeepSeek 对话</a>
+  </div>
+
+  <div class="chat-container">
+    <div class="chat-header">
+      <h2>DeepSeek 对话</h2>
+      <div class="subtitle">与 AI 助手进行对话</div>
+    </div>
+
+    <div id="errorMessage" class="error-message hidden"></div>
+
+    <div class="messages" id="messages">
+      <div class="empty-state">开始对话吧！在下方输入消息...</div>
+    </div>
+
+    <div class="input-area">
+      <textarea 
+        id="messageInput" 
+        placeholder="输入消息..." 
+        rows="1"
+      ></textarea>
+      <button id="sendButton">发送</button>
+    </div>
+  </div>
+
+  <script>
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const errorMessageEl = document.getElementById('errorMessage');
+
+    // 对话历史（用于上下文）
+    let conversationHistory = [];
+
+    // 显示错误信息
+    function showError(message) {
+      errorMessageEl.textContent = message;
+      errorMessageEl.classList.remove('hidden');
+      setTimeout(() => {
+        errorMessageEl.classList.add('hidden');
+      }, 5000);
+    }
+
+    // 隐藏错误信息
+    function hideError() {
+      errorMessageEl.classList.add('hidden');
+    }
+
+    // 添加消息到界面
+    function addMessage(role, content, isLoading = false) {
+      // 移除空状态提示
+      const emptyState = messagesEl.querySelector('.empty-state');
+      if (emptyState) {
+        emptyState.remove();
+      }
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${role} ${isLoading ? 'loading' : ''}`;
+      
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = role === 'user' ? '你' : 'AI';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.textContent = content;
+      
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(contentDiv);
+      messagesEl.appendChild(messageDiv);
+      
+      // 滚动到底部
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      
+      return messageDiv;
+    }
+
+    // 更新消息内容
+    function updateMessage(messageDiv, content) {
+      const contentDiv = messageDiv.querySelector('.message-content');
+      if (contentDiv) {
+        contentDiv.textContent = content;
+        messageDiv.classList.remove('loading');
+      }
+    }
+
+    // 发送消息
+    async function sendMessage() {
+      const message = inputEl.value.trim();
+      if (!message) return;
+
+      // 禁用输入和按钮
+      inputEl.disabled = true;
+      sendButton.disabled = true;
+      hideError();
+
+      // 添加用户消息到界面
+      addMessage('user', message);
+      
+      // 添加到对话历史
+      conversationHistory.push({ role: 'user', content: message });
+
+      // 清空输入框
+      inputEl.value = '';
+
+      // 添加加载中的 AI 消息
+      const loadingMessage = addMessage('assistant', '思考中...', true);
+
+      try {
+        // 调用后端 API
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messages: conversationHistory
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          // 处理错误响应
+          let errorMsg = data.error || '请求失败';
+          if (data.code === 'UNAUTHORIZED') {
+            errorMsg = 'API 密钥错误（401）';
+          } else if (data.code === 'RATE_LIMIT') {
+            errorMsg = '请求频率过高，请稍后再试（429）';
+          } else if (data.status >= 500) {
+            errorMsg = `服务器错误（${data.status}）`;
+          }
+          
+          loadingMessage.remove();
+          showError(`错误：${errorMsg}`);
+          // 从历史中移除最后一条用户消息（因为失败了）
+          conversationHistory.pop();
+          return;
+        }
+
+        // 更新 AI 消息
+        const reply = data.reply || '无回复内容';
+        updateMessage(loadingMessage, reply);
+        
+        // 添加到对话历史
+        conversationHistory.push({ role: 'assistant', content: reply });
+
+      } catch (error) {
+        // 网络错误或其他异常
+        loadingMessage.remove();
+        showError(`网络错误：${error.message}`);
+        // 从历史中移除最后一条用户消息
+        conversationHistory.pop();
+        console.error('[chat] Error:', error);
+      } finally {
+        // 恢复输入和按钮
+        inputEl.disabled = false;
+        sendButton.disabled = false;
+        inputEl.focus();
+      }
+    }
+
+    // 事件监听
+    sendButton.addEventListener('click', sendMessage);
+    
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // 自动调整文本框高度
+    inputEl.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    });
+
+    // 页面加载时聚焦输入框
+    inputEl.focus();
+  </script>
+</body>
+</html>
