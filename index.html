@@ -396,13 +396,81 @@
         <div><a href="${url}" target="_blank" rel="noopener">打开亚马逊</a></div>
         <div class="action-buttons">
           <a href="/pages/chat.html?tpl=plan&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成产品方案</a>
-          <a href="/pages/chat.html?tpl=ads&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成图片方案</a>
+          <button class="action-btn" onclick="handleGenerateImage('${asin}', '${catName}', ${x.monthlySales}, '${url}', this)">生成图片方案</button>
           <button class="action-btn" onclick="handleProfitCalc('${asin}', '${catName}', ${x.monthlySales}, '${url}', this)">利润计算</button>
         </div>
       `;
       card.appendChild(meta);
 
       grid.appendChild(card);
+    }
+  }
+
+  // ---------------- 生成图片方案（Gemini API） ----------------
+  async function handleGenerateImage(asin, category, monthlySales, amazonUrl, btnElement) {
+    const btn = btnElement;
+    const originalText = btn?.textContent;
+    
+    try {
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '生成中...';
+      }
+
+      const catName = decodeURIComponent(category);
+      const prompt = [
+        '根据下面的亚马逊产品信息，生成一张适合跨境电商详情页/主图的产品图片：',
+        '',
+        `ASIN: ${asin}`,
+        `类目: ${catName}`,
+        `月销量: ${monthlySales.toLocaleString()}`,
+        `亚马逊链接: ${amazonUrl}`,
+        '',
+        '要求：电商风格、干净背景，适合展示在亚马逊/TikTok/独立站产品页上。'
+      ].join('\n');
+
+      const res = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || '生成图片失败');
+      }
+
+      // 在新窗口预览图片
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>AI 生成图片 - ${asin}</title>
+            <style>
+              body { margin: 0; padding: 20px; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+              img { max-width: 100%; height: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-radius: 8px; }
+            </style>
+          </head>
+          <body>
+            <img src="${data.imageDataUrl}" alt="Generated Image for ${asin}" />
+          </body>
+          </html>
+        `);
+      } else {
+        // 如果弹窗被拦截，在当前页面显示
+        alert('图片已生成，但弹窗被拦截。请允许弹窗后重试。\n\n或者查看控制台获取图片数据。');
+        console.log('生成的图片 Data URL:', data.imageDataUrl);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('生成图片出错：' + e.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = originalText || '生成图片方案';
+      }
     }
   }
 
