@@ -397,11 +397,55 @@
         <div class="action-buttons">
           <a href="/pages/chat.html?tpl=plan&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成产品方案</a>
           <a href="/pages/chat.html?tpl=ads&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成图片方案</a>
+          <button class="action-btn" onclick="handleProfitCalc('${asin}', '${catName}', ${x.monthlySales}, '${url}', this)">利润计算</button>
         </div>
       `;
       card.appendChild(meta);
 
       grid.appendChild(card);
+    }
+  }
+
+  // ---------------- 利润计算（ChatGPT API） ----------------
+  async function handleProfitCalc(asin, category, monthlySales, amazonUrl, btnElement) {
+    const btn = btnElement;
+    const originalText = btn?.textContent;
+    
+    try {
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '分析中...';
+      }
+
+      // 可选：让用户补充成本/售价信息
+      const extra = window.prompt('可选：补充你的成本/售价/渠道信息（留空也可以）：', '');
+
+      const res = await fetch('/api/profit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: 'Amazon',
+          title: `ASIN: ${asin}`,
+          sourceUrl: amazonUrl,
+          extra: `类目: ${decodeURIComponent(category)}；月销量: ${monthlySales.toLocaleString()}；${extra || ''}`
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || '利润计算失败');
+      }
+
+      // 显示分析结果
+      alert(data.analysis);
+    } catch (e) {
+      console.error(e);
+      alert('利润计算出错：' + e.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = originalText || '利润计算';
+      }
     }
   }
 
