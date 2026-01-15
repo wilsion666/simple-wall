@@ -39,14 +39,18 @@
     .action-buttons { margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; }
     .action-btn { padding:6px 12px; border:1px solid #0066cc; border-radius:6px; background:#fff; color:#0066cc; text-decoration:none; font-size:12px; cursor:pointer; transition:all 0.2s; }
     .action-btn:hover { background:#0066cc; color:#fff; }
+    .nav-item-to-hide { transition: opacity 0.3s, visibility 0.3s; }
+    .nav-item-to-hide.hidden { display: none !important; }
+    .show-nav-btn { padding:6px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; color:#333; text-decoration:none; font-size:12px; cursor:pointer; margin-left:10px; }
+    .show-nav-btn:hover { background:#f5f5f5; }
   </style>
 </head>
 
 <body>
   <div class="top-actions">
     <a class="nav-btn primary" href="/">去看亚马逊新品</a>
-    <a class="nav-btn" href="/articles/">产品开发系列</a>
-    <div class="dropdown">
+    <a class="nav-btn nav-item-to-hide" href="/articles/">产品开发系列</a>
+    <div class="dropdown nav-item-to-hide">
       <a class="nav-btn" href="#">提示词 ▼</a>
       <div class="dropdown-content">
         <a href="/pages/prompts.html?p=operation">运营</a>
@@ -55,9 +59,9 @@
         <a href="/pages/prompts.html?p=influencer">红人</a>
       </div>
     </div>
-    <a class="nav-btn" href="/pages/1688.html">1688</a>
-    <a class="nav-btn" href="/pages/tiktok.html">TikTok</a>
-    <a class="nav-btn" href="/pages/chat.html">DeepSeek 对话</a>
+    <a class="nav-btn nav-item-to-hide" href="/pages/1688.html">1688</a>
+    <a class="nav-btn nav-item-to-hide" href="/pages/tiktok.html">TikTok</a>
+    <a class="nav-btn" href="/pages/chat.html" id="deepseek-btn">DeepSeek 对话</a>
   </div>
 
   <h2 id="title">亚马逊新品</h2>
@@ -505,6 +509,47 @@
         btn.textContent = originalText || '利润计算';
       }
     }
+  }
+
+  // ---------------- 导航隐藏功能 ----------------
+  function hideNavItems() {
+    const items = document.querySelectorAll('.nav-item-to-hide');
+    items.forEach(item => item.classList.add('hidden'));
+    
+    // 添加"显示导航"按钮（如果还没有）
+    const deepseekBtn = document.getElementById('deepseek-btn');
+    if (deepseekBtn && !document.getElementById('show-nav-btn')) {
+      const showNavBtn = document.createElement('a');
+      showNavBtn.id = 'show-nav-btn';
+      showNavBtn.className = 'show-nav-btn';
+      showNavBtn.href = '#';
+      showNavBtn.textContent = '显示导航';
+      showNavBtn.onclick = (e) => {
+        e.preventDefault();
+        showNavItems();
+      };
+      deepseekBtn.parentNode.insertBefore(showNavBtn, deepseekBtn.nextSibling);
+    }
+  }
+
+  function showNavItems() {
+    const items = document.querySelectorAll('.nav-item-to-hide');
+    items.forEach(item => item.classList.remove('hidden'));
+    
+    // 移除"显示导航"按钮
+    const showNavBtn = document.getElementById('show-nav-btn');
+    if (showNavBtn) {
+      showNavBtn.remove();
+    }
+  }
+
+  // 监听 DeepSeek 对话按钮点击
+  const deepseekBtn = document.getElementById('deepseek-btn');
+  if (deepseekBtn) {
+    deepseekBtn.addEventListener('click', (e) => {
+      hideNavItems();
+      // 允许正常跳转
+    });
   }
 
   // ---------------- 事件 ----------------
