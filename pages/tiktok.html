@@ -294,6 +294,25 @@
     pad.appendChild(sales);
     pad.appendChild(a);
 
+    // === 新增：AI 按钮区 ===
+    const btnBox = document.createElement('div');
+    btnBox.style.marginTop = '8px';
+    btnBox.style.display = 'flex';
+    btnBox.style.flexWrap = 'wrap';
+    btnBox.style.gap = '6px';
+
+    const btnImg = document.createElement('button');
+    btnImg.textContent = '生成图片（Gemini）';
+    btnImg.onclick = () => handleGenerateImageTikTok(item, btnImg);
+
+    const btnProfit = document.createElement('button');
+    btnProfit.textContent = '利润计算（ChatGPT）';
+    btnProfit.onclick = () => handleProfitCalcTikTok(item, btnProfit);
+
+    btnBox.appendChild(btnImg);
+    btnBox.appendChild(btnProfit);
+    pad.appendChild(btnBox);
+
     div.appendChild(imgbox);
     div.appendChild(pad);
     return div;
@@ -313,6 +332,97 @@
 
     pageinfo.textContent = `第 ${page}/${pages} 页`;
     pageinfo2.textContent = `第 ${page}/${pages} 页`;
+  }
+
+  // ====== 调用后端 API：生成图片（Gemini） ======
+  async function handleGenerateImageTikTok(item, btn) {
+    try {
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '生成中...';
+      }
+
+      const prompt = [
+        '根据下面的 TikTok 热卖商品信息，生成一张适合 TikTok Shop/短视频带货详情页的产品图片：',
+        '',
+        `标题：${item.title || '（无标题）'}`,
+        `TikTok 链接：${item.url}`,
+        `视频/商品 ID：${item.id}`,
+        `销量：${item.sales || '未知'}`,
+        '',
+        '要求：适合做封面或产品主图，构图清晰，突出卖点。'
+      ].join('\n');
+
+      const res = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || '生成图片失败');
+      }
+
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write('<title>AI 生成图片</title>');
+        win.document.write(`<img src="${data.imageDataUrl}" style="max-width:100%;display:block;margin:0 auto;" />`);
+      } else {
+        const img = new Image();
+        img.src = data.imageDataUrl;
+        img.style.maxWidth = '100%';
+        img.style.display = 'block';
+        img.style.marginTop = '8px';
+        (btn && btn.parentElement) && btn.parentElement.appendChild(img);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('生成图片出错：' + e.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '生成图片（Gemini）';
+      }
+    }
+  }
+
+  // ====== 调用后端 API：利润计算（ChatGPT） ======
+  async function handleProfitCalcTikTok(item, btn) {
+    try {
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '分析中...';
+      }
+
+      const extra = window.prompt('可选：补充你的成本/售价/广告投入等信息（留空也可以）：', '');
+
+      const res = await fetch('/api/profit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: 'TikTok Shop',
+          title: item.title || `ID: ${item.id}`,
+          sourceUrl: item.url,
+          extra: `销量：${item.sales || '未知'}；${extra || ''}`
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || '利润计算失败');
+      }
+
+      alert(data.analysis);
+    } catch (e) {
+      console.error(e);
+      alert('利润计算出错：' + e.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '利润计算（ChatGPT）';
+      }
+    }
   }
 
   // events
