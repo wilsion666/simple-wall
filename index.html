@@ -55,15 +55,6 @@
         <a href="/pages/prompts.html?p=influencer">红人</a>
       </div>
     </div>
-    <div class="dropdown">
-      <a class="nav-btn" href="#">大模型 ▼</a>
-      <div class="dropdown-content">
-        <a href="/pages/model.html?m=nano-banana-pro">Nano Banana Pro</a>
-        <a href="/pages/model.html?m=gpt-image-1-5">GPT Image 1.5</a>
-        <a href="/pages/model.html?m=seedream-4-5">Seedream 4.5</a>
-        <a href="/pages/model.html?m=gemini-3">Gemini 3</a>
-      </div>
-    </div>
     <a class="nav-btn" href="/pages/1688.html">1688</a>
     <a class="nav-btn" href="/pages/tiktok.html">TikTok</a>
     <a class="nav-btn" href="/pages/chat.html">DeepSeek 对话</a>
@@ -88,7 +79,6 @@
       <option value="200">每页 200</option>
     </select>
 
-    <button id="reload">重新加载</button>
     <span class="muted pill" id="stat">未加载</span>
     <span class="muted" id="hint"></span>
   </div>
@@ -523,7 +513,6 @@
   $('pageSize').addEventListener('change', () => { page = 1; render(); });
   $('prev').addEventListener('click', () => { page = Math.max(1, page - 1); render(); });
   $('next').addEventListener('click', () => { page = page + 1; render(); });
-  $('reload').addEventListener('click', () => load());
 
   // 初次加载
   initCategorySelect();
