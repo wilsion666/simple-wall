@@ -4,8 +4,8 @@
     { "source": "/wall/", "destination": "/" },
     { "source": "/1688", "destination": "/pages/1688.html" },
     { "source": "/1688/", "destination": "/pages/1688.html" },
-    { "source": "/chat", "destination": "/pages/chat-full.html" },
-    { "source": "/chat/", "destination": "/pages/chat-full.html" },
+    { "source": "/chat", "destination": "/chat.html" },
+    { "source": "/chat/", "destination": "/chat.html" },
     { "source": "/chat-full.html", "destination": "/pages/chat-full.html" }
   ],
   "redirects": [
