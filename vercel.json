@@ -16,6 +16,7 @@
     { "source": "/prompts-influencer.html", "destination": "/pages/prompts.html?p=influencer", "permanent": true },
     { "source": "/1688.html", "destination": "/pages/1688.html", "permanent": true },
     { "source": "/tiktok.html", "destination": "/pages/tiktok.html", "permanent": true },
-    { "source": "/chat.html", "destination": "/pages/chat.html", "permanent": true }
+    { "source": "/chat.html", "destination": "/pages/chat.html", "permanent": true },
+    { "source": "/chat-full.html", "destination": "/pages/chat-full.html", "permanent": true }
   ]
 }
