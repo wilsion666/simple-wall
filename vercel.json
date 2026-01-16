@@ -3,7 +3,8 @@
     { "source": "/wall", "destination": "/" },
     { "source": "/wall/", "destination": "/" },
     { "source": "/1688", "destination": "/pages/1688.html" },
-    { "source": "/1688/", "destination": "/pages/1688.html" }
+    { "source": "/1688/", "destination": "/pages/1688.html" },
+    { "source": "/chat-full.html", "destination": "/pages/chat-full.html" }
   ],
   "redirects": [
     { "source": "/model-gemini-3.html", "destination": "/pages/model.html?m=gemini-3", "permanent": true },
