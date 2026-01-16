@@ -4,6 +4,8 @@
     { "source": "/wall/", "destination": "/" },
     { "source": "/1688", "destination": "/pages/1688.html" },
     { "source": "/1688/", "destination": "/pages/1688.html" },
+    { "source": "/chat", "destination": "/pages/chat-full.html" },
+    { "source": "/chat/", "destination": "/pages/chat-full.html" },
     { "source": "/chat-full.html", "destination": "/pages/chat-full.html" }
   ],
   "redirects": [
@@ -18,6 +20,7 @@
     { "source": "/1688.html", "destination": "/pages/1688.html", "permanent": true },
     { "source": "/tiktok.html", "destination": "/pages/tiktok.html", "permanent": true },
     { "source": "/chat.html", "destination": "/pages/chat.html", "permanent": true },
-    { "source": "/chat-full.html", "destination": "/pages/chat-full.html", "permanent": true }
+    { "source": "/chat-full.html", "destination": "/pages/chat-full.html", "permanent": true },
+    { "source": "/chat-full", "destination": "/chat", "permanent": true }
   ]
 }
