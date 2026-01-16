@@ -62,6 +62,7 @@
     <a class="nav-btn nav-item-to-hide" href="/pages/1688.html">1688</a>
     <a class="nav-btn nav-item-to-hide" href="/pages/tiktok.html">TikTok</a>
     <a class="nav-btn" href="/pages/chat.html" id="deepseek-btn">DeepSeek 对话</a>
+    <button class="nav-btn" id="chatModalBtn">与AI对话</button>
   </div>
 
   <h2 id="title">亚马逊新品</h2>
@@ -562,6 +563,25 @@
   // 初次加载
   initCategorySelect();
   load();
+
+  // ========== 与AI对话弹窗 ==========
+  // 加载弹窗组件
+  const chatModalScript = document.createElement('script');
+  chatModalScript.src = '/components/chat-modal.js';
+  chatModalScript.onload = () => {
+    // 初始化弹窗实例
+    const chatModal = new ChatModal();
+    window.chatModal = chatModal; // 保存到全局，方便调试
+    
+    // 绑定打开按钮
+    const chatModalBtn = document.getElementById('chatModalBtn');
+    if (chatModalBtn) {
+      chatModalBtn.addEventListener('click', () => {
+        chatModal.open();
+      });
+    }
+  };
+  document.head.appendChild(chatModalScript);
 </script>
 </body>
 </html>
