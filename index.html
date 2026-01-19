@@ -3,46 +3,291 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>亚马逊新品</title>
+  <title>亚马逊新品 - 产品分类</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#fafafa; padding:20px; }
-    h2 { margin: 0 0 12px; }
-    .top-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
-    .nav-btn { padding:8px 10px; border:1px solid #ddd; border-radius:10px; background:#fff; text-decoration:none; color:#333; }
-    .nav-btn.primary { background:#111; color:#fff; border-color:#111; }
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #fafafa; 
+      padding: 20px; 
+      margin: 0;
+    }
     
-    .dropdown { position:relative; display:inline-block; }
-    .dropdown .nav-btn { cursor:pointer; }
-    .dropdown-content { display:none; position:absolute; background-color:#fff; min-width:180px; box-shadow:0 8px 16px rgba(0,0,0,.1); border-radius:8px; z-index:1000; border:1px solid #ddd; margin-top:4px; }
-    .dropdown-content a { color:#333; padding:10px 16px; text-decoration:none; display:block; border-radius:0; }
-    .dropdown-content a:first-child { border-radius:8px 8px 0 0; }
-    .dropdown-content a:last-child { border-radius:0 0 8px 8px; }
-    .dropdown-content a:hover { background-color:#f5f5f5; }
-    .dropdown:hover .dropdown-content { display:block; }
+    h2 { 
+      margin: 0 0 12px; 
+      font-size: 24px;
+    }
+    
+    .top-actions { 
+      display: flex; 
+      gap: 10px; 
+      flex-wrap: wrap; 
+      align-items: center; 
+      margin-bottom: 12px; 
+    }
+    
+    .nav-btn { 
+      padding: 8px 10px; 
+      border: 1px solid #ddd; 
+      border-radius: 10px; 
+      background: #fff; 
+      text-decoration: none; 
+      color: #333; 
+      cursor: pointer;
+    }
+    
+    .nav-btn.primary { 
+      background: #111; 
+      color: #fff; 
+      border-color: #111; 
+    }
+    
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown .nav-btn { cursor: pointer; }
+    .dropdown-content { display: none; position: absolute; background-color: #fff; min-width: 180px; box-shadow: 0 8px 16px rgba(0,0,0,.1); border-radius: 8px; z-index: 1000; border: 1px solid #ddd; margin-top: 4px; }
+    .dropdown-content a { color: #333; padding: 10px 16px; text-decoration: none; display: block; border-radius: 0; }
+    .dropdown-content a:first-child { border-radius: 8px 8px 0 0; }
+    .dropdown-content a:last-child { border-radius: 0 0 8px 8px; }
+    .dropdown-content a:hover { background-color: #f5f5f5; }
+    .dropdown:hover .dropdown-content { display: block; }
+    
+    .bar { 
+      display: flex; 
+      gap: 10px; 
+      flex-wrap: wrap; 
+      align-items: center; 
+      margin: 10px 0 16px; 
+    }
+    
+    input, select, button { 
+      padding: 8px 10px; 
+      border: 1px solid #ddd; 
+      border-radius: 8px; 
+      background: #fff; 
+      font-size: 14px;
+    }
+    
+    button { 
+      cursor: pointer; 
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    select {
+      min-width: 200px;
+    }
+    
+    .muted { 
+      color: #666; 
+      font-size: 13px; 
+    }
+    
+    .pill { 
+      padding: 6px 10px; 
+      border: 1px solid #eee; 
+      border-radius: 999px; 
+      background: #fff; 
+    }
+    
+    .danger { 
+      color: #b00020; 
+    }
+    
+    .wrap { 
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .card { 
+      background: #fff; 
+      border-radius: 12px; 
+      padding: 12px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .imgbox { 
+      border-radius: 10px; 
+      overflow: hidden; 
+      background: #f2f2f2;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .imgbox img { 
+      width: 100%; 
+      height: 100%;
+      object-fit: cover;
+      display: block; 
+    }
+    
+    .meta { 
+      margin-top: 10px; 
+      font-size: 14px; 
+      line-height: 1.6;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .asin { 
+      font-weight: 700; 
+      margin-bottom: 4px;
+    }
+    
+    .sales, .margin { 
+      color: #333;
+      margin-bottom: 4px;
+    }
+    
+    .sales strong, .margin strong {
+      font-weight: 700;
+    }
+    
+    .amazon-link {
+      display: inline-block;
+      margin: 8px 0;
+      padding: 6px 12px;
+      background: #ff9900;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 13px;
+      text-align: center;
+    }
+    
+    .amazon-link:hover {
+      background: #e68a00;
+    }
+    
+    .action-buttons { 
+      margin-top: auto;
+      padding-top: 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    
+    .action-btn { 
+      padding: 6px 8px; 
+      border: 1px solid #0066cc; 
+      border-radius: 6px; 
+      background: #fff; 
+      color: #0066cc; 
+      text-decoration: none; 
+      font-size: 12px; 
+      cursor: pointer; 
+      transition: all 0.2s;
+      text-align: center;
+    }
+    
+    .action-btn:hover { 
+      background: #0066cc; 
+      color: #fff; 
+    }
+    
+    .action-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .pager { 
+      margin-top: 16px; 
+      display: flex; 
+      gap: 10px; 
+      align-items: center; 
+      flex-wrap: wrap; 
+    }
+    
+    /* Modal 样式 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+    
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .close:hover,
+    .close:focus {
+      color: #000;
+    }
+    
+    .modal-body {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .modal-body .field {
+      margin-bottom: 12px;
+    }
+    
+    .modal-body .field strong {
+      display: inline-block;
+      width: 100px;
+      color: #666;
+    }
+    
+    .modal-body .ai-output {
+      margin-top: 15px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      min-height: 100px;
+    }
+    
+    .modal-body .ai-output h4 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: #666;
+    }
 
-    .bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0 16px; }
-    input, select, button { padding:8px 10px; border:1px solid #ddd; border-radius:8px; background:#fff; }
-    button { cursor:pointer; }
-
-    .wrap { display:flex; gap:16px; flex-wrap:wrap; align-items:stretch; }
-    .card { width:260px; background:#fff; border-radius:12px; padding:10px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
-    .imgbox { border-radius:10px; overflow:hidden; background:#f2f2f2; }
-    img { width:100%; display:block; }
-    .meta { margin-top:8px; font-size:14px; line-height:1.6; }
-    .asin { font-weight:700; }
-    .sales { font-weight:700; }
-    a { color:#0066cc; text-decoration:none; }
-    .pager { margin-top:16px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .muted { color:#666; font-size:13px; }
-    .pill { padding:6px 10px; border:1px solid #eee; border-radius:999px; background:#fff; }
-    .danger { color:#b00020; }
-    .action-buttons { margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; }
-    .action-btn { padding:6px 12px; border:1px solid #0066cc; border-radius:6px; background:#fff; color:#0066cc; text-decoration:none; font-size:12px; cursor:pointer; transition:all 0.2s; }
-    .action-btn:hover { background:#0066cc; color:#fff; }
     .nav-item-to-hide { transition: opacity 0.3s, visibility 0.3s; }
     .nav-item-to-hide.hidden { display: none !important; }
-    .show-nav-btn { padding:6px 12px; border:1px solid #ddd; border-radius:8px; background:#fff; color:#333; text-decoration:none; font-size:12px; cursor:pointer; margin-left:10px; }
-    .show-nav-btn:hover { background:#f5f5f5; }
   </style>
 </head>
 
@@ -64,504 +309,511 @@
     <a class="nav-btn" href="/chat">与AI对话</a>
   </div>
 
-  <h2 id="title">亚马逊新品</h2>
+  <h2>亚马逊新品 - 产品分类</h2>
 
   <div class="bar">
-    <select id="cat"></select>
+    <select id="categorySelect">
+      <option value="all">加载中...</option>
+    </select>
 
-    <input id="q" placeholder="搜索 ASIN" style="min-width:220px;" />
-    <select id="sort">
+    <input id="searchInput" placeholder="搜索 ASIN" style="min-width:220px;" />
+    
+    <select id="sortSelect">
       <option value="salesDesc">按月销量：高→低</option>
       <option value="salesAsc">按月销量：低→高</option>
       <option value="asinAsc">按 ASIN：A→Z</option>
       <option value="asinDesc">按 ASIN：Z→A</option>
     </select>
 
-    <select id="pageSize">
+    <select id="pageSizeSelect">
       <option value="50">每页 50</option>
       <option value="100" selected>每页 100</option>
       <option value="200">每页 200</option>
     </select>
 
-    <span class="muted pill" id="stat">未加载</span>
-    <span class="muted" id="hint"></span>
+    <span class="muted pill" id="statusText">未加载</span>
+    <span class="muted danger" id="errorText"></span>
   </div>
 
-  <div class="wrap" id="grid"></div>
+  <div class="wrap" id="productGrid"></div>
 
   <div class="pager">
-    <button id="prev">上一页</button>
+    <button id="prevBtn">上一页</button>
     <span class="muted" id="pageInfo"></span>
-    <button id="next">下一页</button>
+    <button id="nextBtn">下一页</button>
+  </div>
+
+  <!-- Modal 弹窗 -->
+  <div id="actionModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">功能标题</h3>
+        <span class="close">&times;</span>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- 动态内容 -->
+      </div>
+    </div>
   </div>
 
 <script>
-  /**
-   * ✅ 你只需要维护这个表
-   * 说明：你的 CSV 当前在【仓库根目录】（不是 articles/），所以 csv 写成 "xxx.csv"
-   * 图片在 images/<类目文件夹>/<ASIN>.jpg，所以 imgDir 写 images/xxx
-   */
-  const CATEGORIES = [
-    { key: "industrial-scientific", name: "Industrial & Scientific", csv: "data/csv/categories/industrial-scientific.csv", imgDir: "images/Industrial & Scientific" },
-    { key: "musical-instruments", name: "Musical Instruments", csv: "data/csv/categories/musical-instruments.csv", imgDir: "images/Musical Instruments" },
-    { key: "office-products", name: "Office Products", csv: "data/csv/categories/office-products.csv", imgDir: "images/Office Products" },
-    { key: "patio-lawn-garden", name: "Patio, Lawn & Garden", csv: "data/csv/categories/patio-lawn-garden.csv", imgDir: "images/Patio, Lawn & Garden" },
-    { key: "pet-supplies", name: "Pet Supplies", csv: "data/csv/categories/pet-supplies.csv", imgDir: "images/Pet Supplies" },
-    { key: "sports-outdoors", name: "Sports & Outdoors", csv: "data/csv/categories/sports-outdoors.csv", imgDir: "images/Sports & Outdoors" },
-    { key: "tools-home-improvement", name: "Tools & Home Improvement", csv: "data/csv/categories/tools-home-improvement.csv", imgDir: "images/Tools & Home Improvement" },
-    { key: "toys-games", name: "Toys & Games", csv: "data/csv/categories/toys-games.csv", imgDir: "images/Toys & Games" },
-  ];
+  // ============================================================
+  // 全局状态
+  // ============================================================
+  let allProducts = [];           // 所有产品（去重后）
+  let categoryStats = {};         // 类目统计 { categoryName: count }
+  let currentPage = 1;
+  let currentCategory = 'all';
 
-  function $(id) { return document.getElementById(id); }
-
-  // ✅ 关键：逐段编码，解决空格、逗号、& 等字符
-  function encodePath(path) {
-    return String(path).split('/').map(seg => encodeURIComponent(seg)).join('/');
+  // ============================================================
+  // 工具函数
+  // ============================================================
+  function $(id) { 
+    return document.getElementById(id); 
   }
 
-  function getParam(name) {
-    const u = new URL(location.href);
-    return u.searchParams.get(name);
-  }
-  function setParam(name, value) {
-    const u = new URL(location.href);
-    u.searchParams.set(name, value);
-    history.replaceState({}, "", u.toString());
-  }
-
-  function getCurrentCategory() {
-    const catKey = getParam("cat") || CATEGORIES[0]?.key;
-    return CATEGORIES.find(x => x.key === catKey) || CATEGORIES[0];
-  }
-
-  // ---------------- CSV 解析（自动识别分隔符，兼容 BOM） ----------------
+  // CSV 解析（支持引号、换行、BOM）
   function parseCSV(text) {
-    text = text.replace(/^\uFEFF/, '');
-    const firstLine = (text.split(/\r?\n/).find(l => l.trim().length) || '');
-    const candidates = [',', ';', '\t'];
-    let sep = ',', best = -1;
-
-    for (const c of candidates) {
-      const re = c === '\t' ? /\t/g : new RegExp('\\' + c, 'g');
-      const count = (firstLine.match(re) || []).length;
-      if (count > best) { best = count; sep = c; }
-    }
-
+    text = text.replace(/^\uFEFF/, ''); // 移除 BOM
+    
     const rows = [];
-    let row = [], cur = '', inQuotes = false;
+    let row = [];
+    let cell = '';
+    let inQuotes = false;
 
     for (let i = 0; i < text.length; i++) {
-      const ch = text[i];
-      const n = text[i + 1];
+      const char = text[i];
+      const nextChar = text[i + 1];
 
-      if (ch === '"' && inQuotes && n === '"') { cur += '"'; i++; continue; }
-      if (ch === '"') { inQuotes = !inQuotes; continue; }
-
-      if (ch === sep && !inQuotes) { row.push(cur); cur = ''; continue; }
-
-      if (!inQuotes && (ch === '\n' || ch === '\r')) {
-        if (ch === '\r' && n === '\n') i++;
-        if (cur.length || row.length) { row.push(cur); rows.push(row); }
-        cur = ''; row = [];
+      if (char === '"' && inQuotes && nextChar === '"') {
+        cell += '"';
+        i++;
         continue;
       }
 
-      cur += ch;
+      if (char === '"') {
+        inQuotes = !inQuotes;
+        continue;
+      }
+
+      if (char === ',' && !inQuotes) {
+        row.push(cell);
+        cell = '';
+        continue;
+      }
+
+      if (!inQuotes && (char === '\n' || char === '\r')) {
+        if (char === '\r' && nextChar === '\n') i++;
+        if (cell.length || row.length) {
+          row.push(cell);
+          rows.push(row);
+        }
+        cell = '';
+        row = [];
+        continue;
+      }
+
+      cell += char;
     }
 
-    if (cur.length || row.length) { row.push(cur); rows.push(row); }
+    if (cell.length || row.length) {
+      row.push(cell);
+      rows.push(row);
+    }
+
     return rows.filter(r => r.some(x => String(x).trim() !== ''));
   }
 
-  function toNum(v) {
-    const n = Number(String(v).replace(/,/g,'').replace(/\s/g,'').replace(/[^\d.]/g,''));
-    return Number.isFinite(n) ? n : 0;
+  // 数字解析
+  function parseNumber(value) {
+    const str = String(value).replace(/,/g, '').replace(/\s/g, '').replace(/[^\d.-]/g, '');
+    const num = Number(str);
+    return Number.isFinite(num) ? num : 0;
   }
 
-  function normalizeHeader(h) {
-    return String(h || '').replace(/^\uFEFF/, '').trim().toLowerCase();
-  }
-
-  // ---------------- 图片兜底：JPG -> PNG -> 占位图 ----------------
+  // 占位图
   function placeholderSvg(text = 'NO IMAGE') {
-    const esc = (s) => String(s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
-
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260">
       <rect width="260" height="260" fill="#f2f2f2"/>
       <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-            fill="#999" font-size="16" font-family="Arial, sans-serif">${esc(text)}</text>
+            fill="#999" font-size="16" font-family="Arial, sans-serif">${text}</text>
     </svg>`;
     return 'data:image/svg+xml,' + encodeURIComponent(svg);
   }
 
-  function imagePath(asin, ext) {
-    const cat = getCurrentCategory();
-    const safeAsin = encodeURIComponent(asin);
-    const dir = encodePath(cat.imgDir); // ✅ 目录逐段编码（解决 &）
-    return `${dir}/${safeAsin}.${ext}`;
-  }
-
-  function warnOnce(key, msg) {
-    window.__warned ||= new Set();
-    if (window.__warned.has(key)) return;
-    window.__warned.add(key);
-    console.warn(msg);
-  }
-
-  function handleImageError(img) {
-    const asin = img.dataset.asin || '';
-
-    if (img.dataset.fallback === 'jpg') {
-      img.dataset.fallback = 'png';
-      img.src = imagePath(asin, 'png');
-      warnOnce(`img:${asin}:jpg`, `[image] missing JPG -> try PNG: ${asin}`);
-      return;
-    }
-
-    if (img.dataset.fallback === 'png') {
-      img.dataset.fallback = 'placeholder';
-      img.src = placeholderSvg('NO IMAGE');
-      warnOnce(`img:${asin}:png`, `[image] missing PNG -> placeholder: ${asin}`);
-      return;
-    }
-  }
-
-  // ---------------- 页面状态 & 渲染 ----------------
-  let all = [];
-  let page = 1;
-
-  function initCategorySelect() {
-    const sel = $('cat');
-    sel.innerHTML = '';
-
-    for (const c of CATEGORIES) {
-      const opt = document.createElement('option');
-      opt.value = c.key;
-      opt.textContent = c.name;
-      sel.appendChild(opt);
-    }
-
-    const cur = getCurrentCategory();
-    sel.value = cur.key;
-    $('title').textContent = `亚马逊新品 · ${cur.name}`;
-
-    sel.addEventListener('change', () => {
-      setParam("cat", sel.value);
-      page = 1;
-      load();
-    });
-  }
-
-  async function load() {
-    const cat = getCurrentCategory();
+  // ============================================================
+  // 数据加载
+  // ============================================================
+  async function loadData() {
     try {
-      $('hint').textContent = '';
-      $('stat').textContent = '加载中...';
-      $('title').textContent = `亚马逊新品 · ${cat.name}`;
+      $('statusText').textContent = '加载中...';
+      $('errorText').textContent = '';
 
-      // ✅ CSV 路径逐段编码（解决空格、&）
-      const url = encodePath(cat.csv) + '?v=' + Date.now();
-      const res = await fetch(url);
-
-      if (!res.ok) {
-        $('stat').innerHTML = `<span class="danger">加载失败：${res.status}</span>`;
-        $('hint').innerHTML = `<span class="danger">请确认存在：${cat.csv}（CSV 文本）</span>`;
-        console.error('[csv] fetch failed', res.status, res.statusText, url);
-        return;
+      const response = await fetch('/data/1.19-500.csv?v=' + Date.now());
+      
+      if (!response.ok) {
+        throw new Error(`加载失败: ${response.status} 请确认存在: data/1.19-500.csv`);
       }
 
-      const text = await res.text();
-      const table = parseCSV(text);
+      const text = await response.text();
+      const rows = parseCSV(text);
 
-      if (!table.length) {
-        $('stat').innerHTML = `<span class="danger">CSV 为空</span>`;
-        $('hint').innerHTML = `<span class="danger">请检查：${cat.csv}</span>`;
-        return;
+      if (rows.length === 0) {
+        throw new Error('CSV 文件为空');
       }
 
-      const header = table[0].map(h => String(h).replace(/^\uFEFF/, '').trim());
-      const headerNorm = header.map(normalizeHeader);
+      // 解析表头
+      const headers = rows[0].map(h => h.trim());
+      const headerMap = {};
+      headers.forEach((h, i) => {
+        headerMap[h] = i;
+      });
 
-      const idxASIN =
-        headerNorm.findIndex(h => h === 'asin') !== -1
-          ? headerNorm.findIndex(h => h === 'asin')
-          : headerNorm.findIndex(h => h.includes('asin'));
-
-      const idxSales =
-        headerNorm.findIndex(h => h === '月销量') !== -1
-          ? headerNorm.findIndex(h => h === '月销量')
-          : headerNorm.findIndex(h => h.includes('月销量') || h.includes('monthly') || h.includes('sales'));
-
-      if (idxASIN === -1 || idxSales === -1) {
-        $('stat').innerHTML = `<span class="danger">表头不匹配</span>`;
-        $('hint').innerHTML = `<span class="danger">CSV 表头必须包含：ASIN 和 月销量</span>`;
-        console.error('[csv] headers:', header);
-        return;
+      // 检查必需字段
+      const requiredFields = ['ASIN', '小类目', '月销量', '毛利率'];
+      for (const field of requiredFields) {
+        if (!(field in headerMap)) {
+          throw new Error(`CSV 缺少必需字段: ${field}`);
+        }
       }
 
-      all = table.slice(1).map(r => ({
-        asin: (r[idxASIN] || '').trim(),
-        monthlySales: toNum(r[idxSales])
-      })).filter(x => x.asin);
+      // 解析产品数据
+      const productMap = new Map(); // 用于按 ASIN 去重
 
-      page = 1;
-      render();
-    } catch (e) {
-      // ✅ 直接把具体错误显示出来
-      const msg = (e && e.message) ? e.message : String(e);
-      $('stat').innerHTML = `<span class="danger">加载异常：${msg}</span>`;
-      $('hint').innerHTML = `<span class="danger">请看 Console / Network</span>`;
-      console.error('[load] error', e);
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const asin = (row[headerMap['ASIN']] || '').trim();
+        
+        if (!asin) continue;
+
+        // 处理小类目（可能有多行）
+        const categoryText = (row[headerMap['小类目']] || '').trim();
+        const categories = categoryText.split('\n').map(c => c.trim()).filter(c => c);
+        
+        const product = {
+          asin: asin,
+          image: (row[headerMap['商品主图']] || '').trim(),
+          title: (row[headerMap['商品标题']] || '').trim(),
+          detailUrl: (row[headerMap['商品详情页链接']] || '').trim(),
+          smallCategory: categories[0] || '', // 取第一个类目
+          allCategories: categories,          // 保存所有类目
+          monthlySales: parseNumber(row[headerMap['月销量']] || 0),
+          grossMargin: (row[headerMap['毛利率']] || '').trim()
+        };
+
+        // 去重：保留最后一条
+        productMap.set(asin, product);
+      }
+
+      allProducts = Array.from(productMap.values());
+
+      // 统计类目
+      categoryStats = {};
+      allProducts.forEach(product => {
+        // 为每个产品的所有类目计数
+        product.allCategories.forEach(cat => {
+          if (cat) {
+            categoryStats[cat] = (categoryStats[cat] || 0) + 1;
+          }
+        });
+      });
+
+      // 过滤：只保留 ASIN >= 7 的类目
+      const validCategories = Object.entries(categoryStats)
+        .filter(([_, count]) => count >= 7)
+        .sort((a, b) => b[1] - a[1]); // 按数量降序
+
+      // 构建下拉选项
+      const categorySelect = $('categorySelect');
+      categorySelect.innerHTML = '';
+
+      // 添加 "all" 选项
+      const allOption = document.createElement('option');
+      allOption.value = 'all';
+      allOption.textContent = `all (${allProducts.length})`;
+      categorySelect.appendChild(allOption);
+
+      // 添加类目选项
+      validCategories.forEach(([category, count]) => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = `${category} (${count})`;
+        categorySelect.appendChild(option);
+      });
+
+      $('statusText').textContent = `共 ${allProducts.length} 个产品`;
+      
+      // 渲染产品
+      renderProducts();
+
+    } catch (error) {
+      console.error('[loadData] error:', error);
+      $('statusText').textContent = '加载失败';
+      $('errorText').textContent = error.message;
+      $('productGrid').innerHTML = '';
     }
   }
 
-  function getFiltered() {
-    const q = $('q').value.trim().toLowerCase();
-    let list = all;
-    if (q) list = list.filter(x => x.asin.toLowerCase().includes(q));
+  // ============================================================
+  // 产品过滤与排序
+  // ============================================================
+  function getFilteredProducts() {
+    let filtered = allProducts;
 
-    const sort = $('sort').value;
-    list = [...list].sort((a, b) => {
-      if (sort === 'salesDesc') return b.monthlySales - a.monthlySales;
-      if (sort === 'salesAsc') return a.monthlySales - b.monthlySales;
-      if (sort === 'asinAsc') return a.asin.localeCompare(b.asin);
-      if (sort === 'asinDesc') return b.asin.localeCompare(a.asin);
-      return 0;
+    // 按类目过滤
+    if (currentCategory !== 'all') {
+      filtered = filtered.filter(p => p.allCategories.includes(currentCategory));
+    }
+
+    // 按 ASIN 搜索
+    const searchTerm = $('searchInput').value.trim().toLowerCase();
+    if (searchTerm) {
+      filtered = filtered.filter(p => p.asin.toLowerCase().includes(searchTerm));
+    }
+
+    // 排序
+    const sortValue = $('sortSelect').value;
+    filtered = [...filtered].sort((a, b) => {
+      switch (sortValue) {
+        case 'salesDesc': return b.monthlySales - a.monthlySales;
+        case 'salesAsc': return a.monthlySales - b.monthlySales;
+        case 'asinAsc': return a.asin.localeCompare(b.asin);
+        case 'asinDesc': return b.asin.localeCompare(a.asin);
+        default: return 0;
+      }
     });
-    return list;
+
+    return filtered;
   }
 
-  function render() {
-    const list = getFiltered();
-    const size = Number($('pageSize').value) || 100;
-    const total = list.length;
-    const pages = Math.max(1, Math.ceil(total / size));
-    page = Math.min(page, pages);
+  // ============================================================
+  // 产品渲染
+  // ============================================================
+  function renderProducts() {
+    const filtered = getFilteredProducts();
+    const pageSize = Number($('pageSizeSelect').value) || 100;
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    
+    // 确保当前页在有效范围内
+    currentPage = Math.min(currentPage, totalPages);
+    currentPage = Math.max(1, currentPage);
 
-    const start = (page - 1) * size;
-    const view = list.slice(start, start + size);
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pageProducts = filtered.slice(startIndex, endIndex);
 
-    $('stat').textContent = `共 ${total} 个`;
-    $('pageInfo').textContent = `第 ${page} / ${pages} 页（每页 ${size}）`;
+    // 更新状态信息
+    $('statusText').textContent = `共 ${filtered.length} 个产品`;
+    $('pageInfo').textContent = `第 ${currentPage} / ${totalPages} 页`;
 
-    const grid = $('grid');
+    // 渲染产品卡片
+    const grid = $('productGrid');
     grid.innerHTML = '';
 
-    for (const x of view) {
-      const asin = x.asin;
-      const url = `https://www.amazon.com/dp/${encodeURIComponent(asin)}`;
+    if (pageProducts.length === 0) {
+      grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#999;">暂无产品数据</div>';
+      return;
+    }
 
-      const card = document.createElement('div');
-      card.className = 'card';
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener';
-
-      const imgBox = document.createElement('div');
-      imgBox.className = 'imgbox';
-
-      const img = document.createElement('img');
-      img.loading = 'lazy';
-      img.alt = asin;
-      img.dataset.asin = asin;
-      img.dataset.fallback = 'jpg';
-      img.src = imagePath(asin, 'jpg');
-      img.onerror = () => handleImageError(img);
-
-      imgBox.appendChild(img);
-      link.appendChild(imgBox);
-      card.appendChild(link);
-
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-      
-      const cat = getCurrentCategory();
-      const title = ''; // 如果有标题字段可以在这里获取
-      const catName = encodeURIComponent(cat.name);
-      const asinEncoded = encodeURIComponent(asin);
-      
-      meta.innerHTML = `
-        <div class="asin">ASIN：${asin}</div>
-        <div class="sales">月销量：${x.monthlySales.toLocaleString()}</div>
-        <div><a href="${url}" target="_blank" rel="noopener">打开亚马逊</a></div>
-        <div class="action-buttons">
-          <a href="/chat?tpl=plan&asin=${asinEncoded}&cat=${catName}" class="action-btn">生成产品方案</a>
-          <button class="action-btn" onclick="handleGenerateImage('${asin}', '${catName}', ${x.monthlySales}, '${url}', this)">生成图片方案</button>
-          <button class="action-btn" onclick="handleProfitCalc('${asin}', '${catName}', ${x.monthlySales}, '${url}', this)">利润计算</button>
-        </div>
-      `;
-      card.appendChild(meta);
-
+    pageProducts.forEach(product => {
+      const card = createProductCard(product);
       grid.appendChild(card);
-    }
-  }
-
-  // ---------------- 生成图片方案（Gemini API） ----------------
-  async function handleGenerateImage(asin, category, monthlySales, amazonUrl, btnElement) {
-    const btn = btnElement;
-    const originalText = btn?.textContent;
-    
-    try {
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = '生成中...';
-      }
-
-      const catName = decodeURIComponent(category);
-      const prompt = [
-        '根据下面的亚马逊产品信息，生成一张适合跨境电商详情页/主图的产品图片：',
-        '',
-        `ASIN: ${asin}`,
-        `类目: ${catName}`,
-        `月销量: ${monthlySales.toLocaleString()}`,
-        `亚马逊链接: ${amazonUrl}`,
-        '',
-        '要求：电商风格、干净背景，适合展示在亚马逊/TikTok/独立站产品页上。'
-      ].join('\n');
-
-      const res = await fetch('/api/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || '生成图片失败');
-      }
-
-      // 在新窗口预览图片
-      const win = window.open('', '_blank');
-      if (win) {
-        win.document.write(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>AI 生成图片 - ${asin}</title>
-            <style>
-              body { margin: 0; padding: 20px; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-              img { max-width: 100%; height: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-radius: 8px; }
-            </style>
-          </head>
-          <body>
-            <img src="${data.imageDataUrl}" alt="Generated Image for ${asin}" />
-          </body>
-          </html>
-        `);
-      } else {
-        // 如果弹窗被拦截，在当前页面显示
-        alert('图片已生成，但弹窗被拦截。请允许弹窗后重试。\n\n或者查看控制台获取图片数据。');
-        console.log('生成的图片 Data URL:', data.imageDataUrl);
-      }
-    } catch (e) {
-      console.error(e);
-      alert('生成图片出错：' + e.message);
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = originalText || '生成图片方案';
-      }
-    }
-  }
-
-  // ---------------- 利润计算（ChatGPT API） ----------------
-  async function handleProfitCalc(asin, category, monthlySales, amazonUrl, btnElement) {
-    const btn = btnElement;
-    const originalText = btn?.textContent;
-    
-    try {
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = '分析中...';
-      }
-
-      // 可选：让用户补充成本/售价信息
-      const extra = window.prompt('可选：补充你的成本/售价/渠道信息（留空也可以）：', '');
-
-      const res = await fetch('/api/profit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          platform: 'Amazon',
-          title: `ASIN: ${asin}`,
-          sourceUrl: amazonUrl,
-          extra: `类目: ${decodeURIComponent(category)}；月销量: ${monthlySales.toLocaleString()}；${extra || ''}`
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || '利润计算失败');
-      }
-
-      // 显示分析结果
-      alert(data.analysis);
-    } catch (e) {
-      console.error(e);
-      alert('利润计算出错：' + e.message);
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = originalText || '利润计算';
-      }
-    }
-  }
-
-  // ---------------- 导航隐藏功能 ----------------
-  function hideNavItems() {
-    const items = document.querySelectorAll('.nav-item-to-hide');
-    items.forEach(item => item.classList.add('hidden'));
-    
-    // 添加"显示导航"按钮（如果还没有）
-    const deepseekBtn = document.getElementById('deepseek-btn');
-    if (deepseekBtn && !document.getElementById('show-nav-btn')) {
-      const showNavBtn = document.createElement('a');
-      showNavBtn.id = 'show-nav-btn';
-      showNavBtn.className = 'show-nav-btn';
-      showNavBtn.href = '#';
-      showNavBtn.textContent = '显示导航';
-      showNavBtn.onclick = (e) => {
-        e.preventDefault();
-        showNavItems();
-      };
-      deepseekBtn.parentNode.insertBefore(showNavBtn, deepseekBtn.nextSibling);
-    }
-  }
-
-  function showNavItems() {
-    const items = document.querySelectorAll('.nav-item-to-hide');
-    items.forEach(item => item.classList.remove('hidden'));
-    
-    // 移除"显示导航"按钮
-    const showNavBtn = document.getElementById('show-nav-btn');
-    if (showNavBtn) {
-      showNavBtn.remove();
-    }
-  }
-
-  // 监听 DeepSeek 对话按钮点击
-  const deepseekBtn = document.getElementById('deepseek-btn');
-  if (deepseekBtn) {
-    deepseekBtn.addEventListener('click', (e) => {
-      hideNavItems();
-      // 允许正常跳转
     });
+
+    // 更新分页按钮状态
+    $('prevBtn').disabled = currentPage <= 1;
+    $('nextBtn').disabled = currentPage >= totalPages;
   }
 
-  // ---------------- 事件 ----------------
-  $('q').addEventListener('input', () => { page = 1; render(); });
-  $('sort').addEventListener('change', () => { page = 1; render(); });
-  $('pageSize').addEventListener('change', () => { page = 1; render(); });
-  $('prev').addEventListener('click', () => { page = Math.max(1, page - 1); render(); });
-  $('next').addEventListener('click', () => { page = page + 1; render(); });
+  // ============================================================
+  // 创建产品卡片
+  // ============================================================
+  function createProductCard(product) {
+    const card = document.createElement('div');
+    card.className = 'card';
 
-  // 初次加载
-  initCategorySelect();
-  load();
+    // 图片容器
+    const imgBox = document.createElement('div');
+    imgBox.className = 'imgbox';
+
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.alt = product.asin;
+    
+    // 优先使用 image（商品主图），如果为空则用占位图
+    if (product.image) {
+      img.src = product.image;
+      img.onerror = () => {
+        img.src = placeholderSvg('加载失败');
+      };
+    } else {
+      img.src = placeholderSvg('暂无图片');
+    }
+
+    imgBox.appendChild(img);
+    card.appendChild(imgBox);
+
+    // 产品信息
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+
+    const asinDiv = document.createElement('div');
+    asinDiv.className = 'asin';
+    asinDiv.textContent = `ASIN: ${product.asin}`;
+    meta.appendChild(asinDiv);
+
+    const salesDiv = document.createElement('div');
+    salesDiv.className = 'sales';
+    salesDiv.innerHTML = `<strong>月销量:</strong> ${product.monthlySales.toLocaleString()}`;
+    meta.appendChild(salesDiv);
+
+    const marginDiv = document.createElement('div');
+    marginDiv.className = 'margin';
+    marginDiv.innerHTML = `<strong>毛利率:</strong> ${product.grossMargin}`;
+    meta.appendChild(marginDiv);
+
+    // 打开亚马逊按钮
+    const amazonUrl = product.detailUrl || `https://www.amazon.com/dp/${product.asin}`;
+    const amazonLink = document.createElement('a');
+    amazonLink.className = 'amazon-link';
+    amazonLink.href = amazonUrl;
+    amazonLink.target = '_blank';
+    amazonLink.rel = 'noopener noreferrer';
+    amazonLink.textContent = '打开亚马逊';
+    meta.appendChild(amazonLink);
+
+    // 4 个功能按钮
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'action-buttons';
+
+    const buttons = [
+      { text: '生成图片方案', action: 'generateImage' },
+      { text: '生成listing', action: 'generateListing' },
+      { text: '利润计算', action: 'profitCalc' },
+      { text: '产品分析', action: 'productAnalysis' }
+    ];
+
+    buttons.forEach(btn => {
+      const button = document.createElement('button');
+      button.className = 'action-btn';
+      button.textContent = btn.text;
+      button.onclick = () => handleAction(btn.action, product);
+      actionButtons.appendChild(button);
+    });
+
+    meta.appendChild(actionButtons);
+    card.appendChild(meta);
+
+    return card;
+  }
+
+  // ============================================================
+  // 功能按钮处理
+  // ============================================================
+  function handleAction(action, product) {
+    const modal = $('actionModal');
+    const modalTitle = $('modalTitle');
+    const modalBody = $('modalBody');
+
+    // 设置标题
+    const titles = {
+      'generateImage': '生成图片方案',
+      'generateListing': '生成 Listing',
+      'profitCalc': '利润计算',
+      'productAnalysis': '产品分析'
+    };
+    modalTitle.textContent = titles[action] || '功能';
+
+    // 设置内容
+    modalBody.innerHTML = `
+      <div class="field"><strong>ASIN:</strong> ${product.asin}</div>
+      <div class="field"><strong>类目:</strong> ${product.smallCategory}</div>
+      <div class="field"><strong>月销量:</strong> ${product.monthlySales.toLocaleString()}</div>
+      <div class="field"><strong>毛利率:</strong> ${product.grossMargin}</div>
+      <div class="ai-output">
+        <h4>AI 输出区域（预留）</h4>
+        <p style="color:#999;">此处将来会显示 AI 生成的内容...</p>
+        <p style="color:#999;">当前为占位版本，已将产品信息打印到控制台。</p>
+      </div>
+    `;
+
+    // 打印到控制台
+    console.log(`[${action}] 产品信息:`, {
+      asin: product.asin,
+      category: product.smallCategory,
+      allCategories: product.allCategories,
+      monthlySales: product.monthlySales,
+      grossMargin: product.grossMargin,
+      image: product.image,
+      detailUrl: product.detailUrl
+    });
+
+    // 显示 modal
+    modal.style.display = 'block';
+  }
+
+  // ============================================================
+  // 事件监听
+  // ============================================================
+  
+  // 类目选择
+  $('categorySelect').addEventListener('change', (e) => {
+    currentCategory = e.target.value;
+    currentPage = 1;
+    renderProducts();
+  });
+
+  // 搜索
+  $('searchInput').addEventListener('input', () => {
+    currentPage = 1;
+    renderProducts();
+  });
+
+  // 排序
+  $('sortSelect').addEventListener('change', () => {
+    currentPage = 1;
+    renderProducts();
+  });
+
+  // 每页数量
+  $('pageSizeSelect').addEventListener('change', () => {
+    currentPage = 1;
+    renderProducts();
+  });
+
+  // 分页
+  $('prevBtn').addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderProducts();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+
+  $('nextBtn').addEventListener('click', () => {
+    currentPage++;
+    renderProducts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // Modal 关闭
+  const modal = $('actionModal');
+  const closeBtn = document.querySelector('.close');
+  
+  closeBtn.onclick = () => {
+    modal.style.display = 'none';
+  };
+
+  window.onclick = (event) => {
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  };
+
+  // ============================================================
+  // 初始化
+  // ============================================================
+  loadData();
 </script>
 </body>
 </html>
