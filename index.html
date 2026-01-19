@@ -142,12 +142,12 @@
       margin-bottom: 4px;
     }
     
-    .sales, .margin { 
+    .sales, .margin, .price { 
       color: #333;
       margin-bottom: 4px;
     }
     
-    .sales strong, .margin strong {
+    .sales strong, .margin strong, .price strong {
       font-weight: 700;
     }
     
@@ -488,7 +488,8 @@
           smallCategory: categories[0] || '', // 取第一个类目
           allCategories: categories,          // 保存所有类目
           monthlySales: parseNumber(row[headerMap['月销量']] || 0),
-          grossMargin: (row[headerMap['毛利率']] || '').trim()
+          grossMargin: (row[headerMap['毛利率']] || '').trim(),
+          price: (row[headerMap['价格($)']] || '').trim()
         };
 
         // 去重：保留最后一条
@@ -661,6 +662,11 @@
     marginDiv.className = 'margin';
     marginDiv.innerHTML = `<strong>毛利率:</strong> ${product.grossMargin}`;
     meta.appendChild(marginDiv);
+
+    const priceDiv = document.createElement('div');
+    priceDiv.className = 'price';
+    priceDiv.innerHTML = `<strong>价格:</strong> $${product.price}`;
+    meta.appendChild(priceDiv);
 
     // 打开亚马逊按钮
     const amazonUrl = product.detailUrl || `https://www.amazon.com/dp/${product.asin}`;
