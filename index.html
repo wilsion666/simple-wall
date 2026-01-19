@@ -449,10 +449,10 @@
       $('statusText').textContent = '加载中...';
       $('errorText').textContent = '';
 
-      const response = await fetch('/data/1.19-500.csv?v=' + Date.now());
+      const response = await fetch('/data/csv/1.19-500.csv?v=' + Date.now());
       
       if (!response.ok) {
-        throw new Error(`加载失败: ${response.status} 请确认存在: data/1.19-500.csv`);
+        throw new Error(`加载失败: ${response.status} 请确认存在: data/csv/1.19-500.csv`);
       }
 
       const text = await response.text();
