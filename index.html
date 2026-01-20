@@ -532,6 +532,51 @@
       font-size: 14px;
     }
     
+    /* Listing 结果样式 */
+    .listing-result .result-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .listing-result .result-section h4 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: #333;
+      font-weight: 600;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 8px;
+    }
+    
+    .listing-result .result-section p,
+    .listing-result .result-section li {
+      margin: 8px 0;
+      line-height: 1.6;
+      color: #555;
+    }
+    
+    .listing-result .result-section.assumptions {
+      background: #fff9e6;
+      border-left: 3px solid #f59e0b;
+    }
+    
+    /* 加载动画 */
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #0066cc;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
     @media (max-width: 768px) {
       .profit-form {
         grid-template-columns: 1fr;
@@ -1013,6 +1058,30 @@
       return;
     }
 
+    // 生成 Listing 功能
+    if (action === 'generateListing') {
+      modalContent.classList.remove('profit-modal-content');
+      
+      // 显示加载状态
+      modalBody.innerHTML = `
+        <div class="field"><strong>ASIN:</strong> ${product.asin}</div>
+        <div class="field"><strong>标题:</strong> ${product.title || '无'}</div>
+        <div class="ai-output">
+          <h4>正在生成 Listing...</h4>
+          <div style="text-align:center; padding:20px;">
+            <div class="spinner"></div>
+            <p style="color:#999; margin-top:10px;">AI 正在分析产品图片和标题...</p>
+          </div>
+        </div>
+      `;
+      
+      modal.style.display = 'block';
+      
+      // 调用 API
+      generateListingWithAI(product, modalBody);
+      return;
+    }
+
     // 其他功能移除特殊样式
     modalContent.classList.remove('profit-modal-content');
 
@@ -1042,6 +1111,107 @@
 
     // 显示 modal
     modal.style.display = 'block';
+  }
+
+  // ============================================================
+  // 生成 Listing AI 调用
+  // ============================================================
+  async function generateListingWithAI(product, container) {
+    try {
+      const response = await fetch('/api/generate-listing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: product.title,
+          imageUrl: product.image,
+          asin: product.asin
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || '生成失败');
+      }
+      
+      // 渲染结果
+      renderListingResult(container, data.listing, product);
+      
+    } catch (error) {
+      console.error('[generateListing] Error:', error);
+      container.innerHTML = `
+        <div class="field"><strong>ASIN:</strong> ${product.asin}</div>
+        <div class="ai-output">
+          <h4 style="color:#dc2626;">生成失败</h4>
+          <p style="color:#999;">${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  // ============================================================
+  // 渲染 Listing 结果
+  // ============================================================
+  function renderListingResult(container, listing, product) {
+    container.innerHTML = `
+      <div class="listing-result">
+        <!-- 产品信息 -->
+        <div class="field"><strong>ASIN:</strong> ${product.asin}</div>
+        
+        <!-- 产品名称 -->
+        <div class="result-section">
+          <h4>产品名称</h4>
+          <p><strong>英文:</strong> ${listing.product_name_en}</p>
+          <p><strong>中文:</strong> ${listing.product_name_cn}</p>
+        </div>
+        
+        <!-- 标题 -->
+        <div class="result-section">
+          <h4>标题</h4>
+          <p><strong>英文:</strong> ${listing.title_en}</p>
+          <p><strong>中文:</strong> ${listing.title_cn}</p>
+        </div>
+        
+        <!-- 五点描述 -->
+        <div class="result-section">
+          <h4>五点描述（Bullets）</h4>
+          <ol>
+            ${listing.bullets_en.map(bullet => `<li>${bullet}</li>`).join('')}
+          </ol>
+        </div>
+        
+        <!-- 假设说明 -->
+        ${listing.assumptions && listing.assumptions.length > 0 ? `
+          <div class="result-section assumptions">
+            <h4>假设说明（Assumptions）</h4>
+            <ul>
+              ${listing.assumptions.map(a => `
+                <li><strong>${a.item}:</strong> ${a.reason}</li>
+              `).join('')}
+            </ul>
+          </div>
+        ` : ''}
+        
+        <!-- 复制按钮 -->
+        <div style="margin-top:20px; text-align:center;">
+          <button class="action-btn" onclick="copyListingToClipboard(${JSON.stringify(listing).replace(/"/g, '&quot;')})">
+            复制 JSON
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  // ============================================================
+  // 复制到剪贴板
+  // ============================================================
+  function copyListingToClipboard(listing) {
+    const text = JSON.stringify(listing, null, 2);
+    navigator.clipboard.writeText(text)
+      .then(() => alert('已复制到剪贴板！'))
+      .catch(err => console.error('复制失败:', err));
   }
 
   // ============================================================
