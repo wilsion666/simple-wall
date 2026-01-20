@@ -285,6 +285,270 @@
       font-size: 14px;
       color: #666;
     }
+    
+    /* 利润计算样式 */
+    .profit-modal-content {
+      max-width: 700px;
+    }
+    
+    .profit-product-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .profit-product-info .info-row {
+      margin-bottom: 10px;
+    }
+    
+    .profit-product-info .info-row .label {
+      color: #666;
+      font-size: 13px;
+      margin-right: 8px;
+    }
+    
+    .profit-product-info .value-asin {
+      font-weight: 700;
+      color: #333;
+    }
+    
+    .profit-product-info .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 10px;
+    }
+    
+    .profit-product-info .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .profit-product-info .info-item .label {
+      color: #666;
+      font-size: 12px;
+    }
+    
+    .profit-product-info .value-price {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0066cc;
+    }
+    
+    .profit-product-info .value-margin {
+      font-size: 18px;
+      font-weight: 700;
+      color: #059669;
+      background: #d1fae5;
+      padding: 4px 10px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    
+    .profit-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .profit-form .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .profit-form .form-group label {
+      color: #666;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .profit-form .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    .profit-form .input-wrapper input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    
+    .profit-form .input-wrapper input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+    
+    .profit-form .input-wrapper input.error {
+      border-color: #ef4444;
+    }
+    
+    .profit-form .input-wrapper .unit {
+      position: absolute;
+      right: 10px;
+      color: #999;
+      font-size: 12px;
+      pointer-events: none;
+    }
+    
+    .profit-output {
+      background: #fafbfc;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    
+    .profit-output .output-section {
+      margin-bottom: 20px;
+    }
+    
+    .profit-output .output-section h4 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      color: #333;
+      font-weight: 600;
+    }
+    
+    .profit-output .cost-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .profit-output .cost-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      line-height: 1.8;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    
+    .profit-output .cost-item .cost-label {
+      flex: 1;
+    }
+    
+    .profit-output .cost-item .cost-value {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+    }
+    
+    .profit-output .cost-item .pct {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .profit-output .cost-item .usd {
+      color: #999;
+      font-size: 13px;
+    }
+    
+    .profit-output .margin-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+    }
+    
+    .profit-output .value-positive {
+      font-weight: 700;
+      color: #059669;
+      font-size: 16px;
+    }
+    
+    .profit-output .value-negative {
+      font-weight: 700;
+      color: #dc2626;
+      font-size: 16px;
+    }
+    
+    .profit-output .value-warning {
+      font-weight: 700;
+      color: #f59e0b;
+      font-size: 16px;
+    }
+    
+    .profit-final {
+      background: #f3f4f6;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: center;
+      border-top: 2px solid #e5e7eb;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .profit-final .final-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .profit-final .final-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+    }
+    
+    .profit-final .final-value .pct {
+      font-size: 20px;
+      color: #666;
+      margin-left: 8px;
+    }
+    
+    .verdict-badge {
+      padding: 15px 20px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      margin-top: 15px;
+    }
+    
+    .verdict-badge.verdict-success {
+      background: #10b981;
+    }
+    
+    .verdict-badge.verdict-warning {
+      background: #f59e0b;
+    }
+    
+    .verdict-badge.verdict-fail {
+      background: #ef4444;
+    }
+    
+    .profit-placeholder {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+      font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+      .profit-form {
+        grid-template-columns: 1fr;
+      }
+      
+      .profit-product-info .info-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .profit-modal-content {
+        width: 95vw;
+      }
+      
+      .profit-final .final-value {
+        font-size: 24px;
+      }
+    }
 
     .nav-item-to-hide { transition: opacity 0.3s, visibility 0.3s; }
     .nav-item-to-hide.hidden { display: none !important; }
@@ -710,6 +974,7 @@
     const modal = $('actionModal');
     const modalTitle = $('modalTitle');
     const modalBody = $('modalBody');
+    const modalContent = modal.querySelector('.modal-content');
 
     // 设置标题
     const titles = {
@@ -720,7 +985,38 @@
     };
     modalTitle.textContent = titles[action] || '功能';
 
-    // 设置内容
+    // 利润计算功能
+    if (action === 'profitCalc') {
+      console.log('[DEBUG] 触发利润计算，action:', action);
+      console.log('[DEBUG] 产品数据:', product);
+      
+      // 检查依赖函数是否存在
+      if (typeof renderProfitCalc !== 'function') {
+        console.error('[ERROR] renderProfitCalc 函数未定义！');
+        modalBody.innerHTML = '<p style="color:red;">错误：利润计算函数未加载</p>';
+        modal.style.display = 'block';
+        return;
+      }
+      
+      if (typeof parseMarginPct !== 'function') {
+        console.error('[ERROR] parseMarginPct 函数未定义！请检查 profitCalc.js 是否加载');
+        modalBody.innerHTML = '<p style="color:red;">错误：profitCalc.js 未正确加载</p>';
+        modal.style.display = 'block';
+        return;
+      }
+      
+      console.log('[DEBUG] 开始渲染利润计算界面...');
+      modalContent.classList.add('profit-modal-content');
+      renderProfitCalc(product, modalBody);
+      modal.style.display = 'block';
+      console.log('[DEBUG] 利润计算界面渲染完成');
+      return;
+    }
+
+    // 其他功能移除特殊样式
+    modalContent.classList.remove('profit-modal-content');
+
+    // 其他功能的占位内容
     modalBody.innerHTML = `
       <div class="field"><strong>ASIN:</strong> ${product.asin}</div>
       <div class="field"><strong>类目:</strong> ${product.smallCategory}</div>
@@ -746,6 +1042,260 @@
 
     // 显示 modal
     modal.style.display = 'block';
+  }
+
+  // ============================================================
+  // 利润计算UI渲染
+  // ============================================================
+  function renderProfitCalc(product, container) {
+    console.log('[renderProfitCalc] 开始渲染，产品:', product.asin);
+    
+    // 解析价格和毛利率
+    const priceUsd = parseFloat(product.price) || 0;
+    console.log('[renderProfitCalc] 解析价格:', priceUsd);
+    
+    const marginPct = parseMarginPct(product.grossMargin);
+    console.log('[renderProfitCalc] 解析毛利率:', product.grossMargin, '->', marginPct);
+
+    // 生成唯一ID
+    const uid = 'profit_' + Date.now();
+
+    // 渲染HTML
+    container.innerHTML = `
+      <!-- 产品信息区 -->
+      <div class="profit-product-info">
+        <div class="info-row">
+          <span class="label">ASIN:</span>
+          <span class="value-asin">${product.asin}</span>
+        </div>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">售价</span>
+            <span class="value-price">$${priceUsd.toFixed(2)}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Amazon毛利率</span>
+            <span class="value-margin">${product.grossMargin}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 输入表单区 -->
+      <div class="profit-form">
+        <div class="form-group">
+          <label>产品成本</label>
+          <div class="input-wrapper">
+            <input type="number" id="${uid}_productCost" placeholder="例如: 50" min="0" step="0.01">
+            <span class="unit">RMB</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>物流成本</label>
+          <div class="input-wrapper">
+            <input type="number" id="${uid}_shippingCost" placeholder="例如: 15" min="0" step="0.01">
+            <span class="unit">RMB</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>汇率（RMB/USD）</label>
+          <div class="input-wrapper">
+            <input type="number" id="${uid}_fx" value="7.1" min="0.01" step="0.01" title="1美元=7.1人民币">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>广告费占比</label>
+          <div class="input-wrapper">
+            <input type="number" id="${uid}_adPct" placeholder="例如: 12" min="0" max="100" step="0.1">
+            <span class="unit">%</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>退款占比</label>
+          <div class="input-wrapper">
+            <input type="number" id="${uid}_refundPct" placeholder="例如: 3" min="0" max="100" step="0.1">
+            <span class="unit">%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 输出结果区 -->
+      <div id="${uid}_output" class="profit-placeholder">
+        <p>请输入成本信息开始计算</p>
+      </div>
+    `;
+
+    console.log('[renderProfitCalc] HTML 已注入，UID:', uid);
+    
+    // 绑定实时计算
+    setTimeout(() => {
+      console.log('[renderProfitCalc] 开始绑定计算逻辑...');
+      setupProfitCalc(uid, priceUsd, marginPct);
+      console.log('[renderProfitCalc] 计算逻辑绑定完成');
+    }, 0);
+  }
+
+  // ============================================================
+  // 利润计算逻辑
+  // ============================================================
+  function setupProfitCalc(uid, priceUsd, marginPct) {
+    const inputs = {
+      productCost: $(`${uid}_productCost`),
+      shippingCost: $(`${uid}_shippingCost`),
+      fx: $(`${uid}_fx`),
+      adPct: $(`${uid}_adPct`),
+      refundPct: $(`${uid}_refundPct`)
+    };
+    const output = $(`${uid}_output`);
+
+    if (!output) return;
+
+    // 计算并更新UI
+    function calculate() {
+      // 输入验证：确保非负且在合理范围内
+      const productCostRmb = Math.max(0, parseFloat(inputs.productCost.value) || 0);
+      const shippingCostRmb = Math.max(0, parseFloat(inputs.shippingCost.value) || 0);
+      const fx = Math.max(0.01, parseFloat(inputs.fx.value) || 7.1);
+      const adPct = Math.max(0, Math.min(1, (parseFloat(inputs.adPct.value) || 0) / 100));
+      const refundPct = Math.max(0, Math.min(1, (parseFloat(inputs.refundPct.value) || 0) / 100));
+
+      // 检查是否有有效输入（检查输入框是否为空，而不是值是否为0）
+      const hasInput = inputs.productCost.value.trim() || inputs.shippingCost.value.trim() || 
+                      inputs.adPct.value.trim() || inputs.refundPct.value.trim();
+      if (!hasInput) {
+        output.className = 'profit-placeholder';
+        output.innerHTML = '<p>请输入成本信息开始计算</p>';
+        return;
+      }
+
+      // 调用计算函数
+      const result = calcProfitMetrics({
+        priceUsd,
+        asinMarginPct: marginPct,
+        productCostRmb,
+        shippingCostRmb,
+        fx,
+        adPct,
+        refundPct
+      });
+
+      // 错误处理：显示具体错误信息
+      if (!result || result.error) {
+        output.className = 'profit-placeholder';
+        const errorMsg = result?.error || '未知错误';
+        output.innerHTML = `<p style="color:#dc2626;">计算失败：${errorMsg}</p>`;
+        return;
+      }
+
+      // 渲染结果
+      renderProfitResult(output, result, priceUsd);
+    }
+
+    // 防抖函数
+    let timer = null;
+    function debounceCalculate() {
+      clearTimeout(timer);
+      timer = setTimeout(calculate, 200);
+    }
+
+    // 绑定事件
+    Object.values(inputs).forEach(input => {
+      if (input) {
+        input.addEventListener('input', debounceCalculate);
+      }
+    });
+
+    // 初始计算（如果汇率已有值）
+    calculate();
+  }
+
+  // ============================================================
+  // 渲染利润计算结果
+  // ============================================================
+  function renderProfitResult(container, result, priceUsd) {
+    // 决策徽章类名
+    let verdictClass = 'verdict-fail';
+    let verdictText = '❌ 不做 - 利润率过低';
+    
+    if (result.verdict === '✅ 做') {
+      verdictClass = 'verdict-success';
+      verdictText = '✅ 做 - 利润率良好';
+    } else if (result.verdict === '⚠️ 讨论') {
+      verdictClass = 'verdict-warning';
+      verdictText = '⚠️ 讨论 - 利润率一般';
+    }
+
+    // 利润颜色（与决策逻辑保持一致）
+    const profitClass = result.profitPct >= 0.15 ? 'value-positive' : 
+                       result.profitPct > 0.12 ? 'value-warning' : 'value-negative';
+
+    // 计算广告费和退款费占比
+    const adPct = priceUsd > 0 ? result.adUsd / priceUsd : 0;
+    const refundPctCalc = priceUsd > 0 ? result.refundUsd / priceUsd : 0;
+
+    container.className = 'profit-output';
+    container.innerHTML = `
+      <!-- 成本结构 -->
+      <div class="output-section">
+        <h4>成本结构</h4>
+        <div class="cost-list">
+          <div class="cost-item">
+            <span class="cost-label">• 产品成本占比</span>
+            <span class="cost-value">
+              <span class="pct">${formatPct(result.productCostPct)}</span>
+              <span class="usd">(${formatUsd(result.productCostUsd)})</span>
+            </span>
+          </div>
+          <div class="cost-item">
+            <span class="cost-label">• 物流成本占比</span>
+            <span class="cost-value">
+              <span class="pct">${formatPct(result.shippingCostPct)}</span>
+              <span class="usd">(${formatUsd(result.shippingCostUsd)})</span>
+            </span>
+          </div>
+          <div class="cost-item">
+            <span class="cost-label">• 广告费</span>
+            <span class="cost-value">
+              <span class="pct">${formatPct(adPct)}</span>
+              <span class="usd">(${formatUsd(result.adUsd)})</span>
+            </span>
+          </div>
+          <div class="cost-item">
+            <span class="cost-label">• 退款费</span>
+            <span class="cost-value">
+              <span class="pct">${formatPct(refundPctCalc)}</span>
+              <span class="usd">(${formatUsd(result.refundUsd)})</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Amazon毛利 -->
+      <div class="output-section">
+        <h4>Amazon费用后</h4>
+        <div class="margin-item">
+          <span>毛利额</span>
+          <span class="value-positive">${formatUsd(result.amazonMarginUsd)} (${formatPct(result.amazonMarginPct)})</span>
+        </div>
+      </div>
+      
+      <!-- 最终利润 -->
+      <div class="profit-final">
+        <div class="final-label">🎯 最终利润</div>
+        <div class="final-value ${profitClass}">
+          <span class="usd">${formatUsd(result.profitUsd)}</span>
+          <span class="pct">(${formatPct(result.profitPct)})</span>
+        </div>
+      </div>
+      
+      <!-- 决策建议 -->
+      <div class="verdict-badge ${verdictClass}">
+        ${verdictText}
+      </div>
+    `;
   }
 
   // ============================================================
@@ -795,14 +1345,17 @@
   // Modal 关闭
   const modal = $('actionModal');
   const closeBtn = document.querySelector('.close');
+  const modalContent = modal.querySelector('.modal-content');
   
   closeBtn.onclick = () => {
     modal.style.display = 'none';
+    modalContent.classList.remove('profit-modal-content');
   };
 
   window.onclick = (event) => {
     if (event.target === modal) {
       modal.style.display = 'none';
+      modalContent.classList.remove('profit-modal-content');
     }
   };
 
@@ -811,6 +1364,7 @@
   // ============================================================
   loadData();
 </script>
+<script src="/utils/profitCalc.js?v=20260120"></script>
 </body>
 </html>
 
