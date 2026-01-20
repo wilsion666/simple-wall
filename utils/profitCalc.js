@@ -4,9 +4,13 @@
  * 用于计算产品的利润指标和决策建议
  */
 
+console.log('[profitCalc.js] 脚本开始加载...');
+
 // 利润率阈值常量
 const PROFIT_THRESHOLD_HIGH = 0.15;  // 15% 及以上：做
 const PROFIT_THRESHOLD_LOW = 0.12;   // 12% 以下：不做
+
+console.log('[profitCalc.js] 常量已定义');
 
 /**
  * 计算利润指标
@@ -152,3 +156,9 @@ function parseMarginPct(marginStr) {
   // 如果0-1之间，认为已经是小数形式（如0.48）
   return num > 1 ? num / 100 : num;
 }
+
+console.log('[profitCalc.js] 所有函数已定义完成');
+console.log('[profitCalc.js] calcProfitMetrics:', typeof calcProfitMetrics);
+console.log('[profitCalc.js] formatUsd:', typeof formatUsd);
+console.log('[profitCalc.js] formatPct:', typeof formatPct);
+console.log('[profitCalc.js] parseMarginPct:', typeof parseMarginPct);
