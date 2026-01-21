@@ -3,8 +3,10 @@
  * 路径: /api/generate-listing
  * 方法: POST
  *
+ * 使用 Vercel AI Gateway (OpenAI-compatible API)
+ * 
  * 环境变量：
- * - AI_GATEWAY_API_KEY: Vercel AI Gateway 的 API Key
+ * - AI_GATEWAY_API_KEY: Vercel AI Gateway 的 API Key (vck_ 开头)
  */
 
 export default async function handler(req, res) {
@@ -12,12 +14,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  const apiKey = process.env.gemini3propreview;
+  // 从环境变量读取 Vercel AI Gateway API Key (vck_ 开头)
+  const apiKey = process.env.AI_GATEWAY_API_KEY;
   if (!apiKey) {
-    console.error('[generate-listing] ❌ gemini3propreview not found in environment variables');
-    console.error('[generate-listing] Available env keys:', Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY') || k.includes('gemini')));
+    console.error('[generate-listing] ❌ AI_GATEWAY_API_KEY not found in environment variables');
+    console.error('[generate-listing] 💡 Please set AI_GATEWAY_API_KEY (vck_ prefix) in Vercel environment variables');
     return res.status(500).json({
-      error: 'Server configuration error: gemini3propreview not found',
+      error: 'Server configuration error: AI_GATEWAY_API_KEY not found',
       code: 'CONFIG_ERROR',
     });
   }
@@ -58,12 +61,10 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!imageUrl || typeof imageUrl !== 'string') {
-    return res.status(400).json({
-      error: 'Missing required field: imageUrl',
-      code: 'MISSING_IMAGE_URL',
-    });
-  }
+  // imageUrl 可选，因为不是所有产品都有图片
+  console.log(`[generate-listing] 📤 Processing ASIN: ${asin || 'N/A'}`);
+  console.log(`[generate-listing] 📝 Title: ${title.substring(0, 50)}...`);
+  console.log(`[generate-listing] 🖼️  Image URL: ${imageUrl ? 'provided' : 'not provided'}`);
 
   // 构建提示词
   const systemPrompt = `假如你是一位资深亚马逊美国站Listing文案专家，
@@ -90,44 +91,50 @@ export default async function handler(req, res) {
   ]
 }`;
 
-  // Google Gemini 官方 API URL
-  const modelName = 'gemini-1.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+  // Vercel AI Gateway URL (OpenAI-compatible)
+  const url = 'https://ai-gateway.vercel.sh/v1/chat/completions';
   
-  // 构建请求体（Google Gemini API 格式）
+  // 构建消息内容
+  const messageContent = [
+    {
+      type: 'text',
+      text: systemPrompt + `\n\n【输入标题】\n${title}`
+    }
+  ];
+
+  // 如果有图片URL，添加图片内容
+  if (imageUrl) {
+    messageContent.push({
+      type: 'image_url',
+      image_url: {
+        url: imageUrl
+      }
+    });
+  }
+
+  // 构建请求体（OpenAI Chat Completions 格式）
   const payload = {
-    contents: [
+    model: 'google/gemini-3-flash',  // 使用 Vercel AI Gateway 的模型标识
+    messages: [
       {
-        parts: [
-          {
-            text: systemPrompt + `\n\n【输入标题】\n${title}`
-          },
-          {
-            // 使用图片 URL
-            inline_data: {
-              mime_type: 'image/jpeg',
-              data: await fetchImageAsBase64(imageUrl)
-            }
-          }
-        ]
+        role: 'user',
+        content: messageContent
       }
     ],
-    generationConfig: {
-      temperature: 0.4,
-      responseMimeType: 'application/json'
-    }
+    temperature: 0.4,
+    response_format: { type: 'json_object' }
   };
 
   try {
-    console.log(`[generate-listing] 📤 Processing ASIN: ${asin || 'N/A'}`);
-    console.log(`[generate-listing] 🌐 Request URL: ${url}?key=****`);
-    console.log(`[generate-listing] 🤖 Model: ${modelName}`);
-    console.log(`[generate-listing] 🔑 API Key: ${keyPreview}`);
+    console.log(`[generate-listing] 🌐 Request URL: ${url}`);
+    console.log(`[generate-listing] 🤖 Model: google/gemini-3-flash`);
+    console.log(`[generate-listing] 🔑 Using API Key: ${keyPreview}`);
     
-    // Google 官方 API 使用 URL 参数传递 key（不是 Bearer token）
-    const response = await fetch(`${url}?key=${encodeURIComponent(apiKey)}`, {
+    // 使用 Authorization: Bearer <token> header
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
@@ -141,14 +148,16 @@ export default async function handler(req, res) {
       console.error('[generate-listing] ❌ API error:', response.status);
       console.error('[generate-listing] Error details:', JSON.stringify(data, null, 2));
       
-      // 特别检查 API key 相关错误
-      const errorMsg = data.error?.message || JSON.stringify(data);
-      if (errorMsg.toLowerCase().includes('api key') || errorMsg.toLowerCase().includes('unauthorized')) {
+      // 检查 API key 相关错误
+      const errorMsg = JSON.stringify(data);
+      if (errorMsg.toLowerCase().includes('api key') || 
+          errorMsg.toLowerCase().includes('unauthorized') ||
+          errorMsg.toLowerCase().includes('authentication')) {
         console.error('[generate-listing] 🔐 This appears to be an API key authentication error!');
         console.error('[generate-listing] 💡 Please check:');
         console.error('[generate-listing]    1. AI_GATEWAY_API_KEY is set in Vercel environment variables');
-        console.error('[generate-listing]    2. The key value is correct (check for extra spaces)');
-        console.error('[generate-listing]    3. The gateway URL includes your correct account ID and gateway ID');
+        console.error('[generate-listing]    2. The key starts with "vck_"');
+        console.error('[generate-listing]    3. The key is valid and has no extra spaces');
       }
       
       return res.status(response.status).json({
@@ -159,29 +168,31 @@ export default async function handler(req, res) {
       });
     }
 
-    // 提取生成的内容
-    const candidates = data.candidates || [];
-    const parts = candidates[0]?.content?.parts || [];
-    const textContent = parts[0]?.text;
+    // 提取生成的内容 (OpenAI format)
+    const choices = data.choices || [];
+    const messageContent = choices[0]?.message?.content;
 
-    if (!textContent) {
-      console.warn('[generate-listing] No text content in response');
+    if (!messageContent) {
+      console.warn('[generate-listing] No content in response');
       return res.status(500).json({
-        error: 'No content returned from Gemini',
+        error: 'No content returned from AI Gateway',
         code: 'NO_CONTENT',
       });
     }
 
+    console.log(`[generate-listing] 📄 Raw content length: ${messageContent.length}`);
+
     // 解析 JSON
     let listing;
     try {
-      listing = JSON.parse(textContent);
+      listing = JSON.parse(messageContent);
     } catch (e) {
       console.error('[generate-listing] Failed to parse JSON:', e);
+      console.error('[generate-listing] Raw content:', messageContent.substring(0, 500));
       return res.status(500).json({
         error: 'Failed to parse AI response as JSON',
         code: 'INVALID_JSON_RESPONSE',
-        rawContent: textContent,
+        rawContent: messageContent,
       });
     }
 
@@ -195,7 +206,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log(`[generate-listing] Success for ASIN: ${asin || 'N/A'}`);
+    console.log(`[generate-listing] ✅ Success for ASIN: ${asin || 'N/A'}`);
     
     return res.status(200).json({
       success: true,
@@ -205,29 +216,9 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('[generate-listing] Network or parsing error:', error);
     return res.status(500).json({
-      error: 'Failed to communicate with Gemini API',
+      error: 'Failed to communicate with AI Gateway',
       code: 'NETWORK_ERROR',
       message: error.message,
     });
-  }
-}
-
-/**
- * 获取图片并转换为 base64
- * @param {string} imageUrl - 图片 URL
- * @returns {Promise<string>} base64 编码的图片数据
- */
-async function fetchImageAsBase64(imageUrl) {
-  try {
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.status}`);
-    }
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    return buffer.toString('base64');
-  } catch (error) {
-    console.error('[fetchImageAsBase64] Error:', error);
-    throw new Error(`Failed to fetch and encode image: ${error.message}`);
   }
 }

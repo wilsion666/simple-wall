@@ -1117,35 +1117,60 @@
   // 生成 Listing AI 调用
   // ============================================================
   async function generateListingWithAI(product, container) {
+    console.log('[generateListingWithAI] 开始调用 API');
+    console.log('[generateListingWithAI] 产品信息:', {
+      asin: product.asin,
+      title: product.title,
+      imageUrl: product.image
+    });
+
     try {
+      const requestBody = {
+        title: product.title,
+        imageUrl: product.image || '',  // 确保有值，即使是空字符串
+        asin: product.asin
+      };
+      
+      console.log('[generateListingWithAI] 发送请求到 /api/generate-listing');
+      console.log('[generateListingWithAI] 请求体:', requestBody);
+      
       const response = await fetch('/api/generate-listing', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          title: product.title,
-          imageUrl: product.image,
-          asin: product.asin
-        })
+        body: JSON.stringify(requestBody)
       });
       
+      console.log('[generateListingWithAI] 收到响应，状态码:', response.status);
+      
       const data = await response.json();
+      console.log('[generateListingWithAI] 响应数据:', data);
       
       if (!response.ok) {
-        throw new Error(data.error || '生成失败');
+        const errorMsg = data.error || data.message || '生成失败';
+        console.error('[generateListingWithAI] API 返回错误:', errorMsg);
+        console.error('[generateListingWithAI] 错误详情:', data);
+        throw new Error(errorMsg);
       }
+      
+      console.log('[generateListingWithAI] ✅ 成功生成 Listing');
       
       // 渲染结果
       renderListingResult(container, data.listing, product);
       
     } catch (error) {
-      console.error('[generateListing] Error:', error);
+      console.error('[generateListingWithAI] ❌ 捕获错误:', error);
+      console.error('[generateListingWithAI] 错误堆栈:', error.stack);
+      
       container.innerHTML = `
         <div class="field"><strong>ASIN:</strong> ${product.asin}</div>
         <div class="ai-output">
-          <h4 style="color:#dc2626;">生成失败</h4>
-          <p style="color:#999;">${error.message}</p>
+          <h4 style="color:#dc2626;">❌ 生成失败</h4>
+          <p style="color:#999; margin-top:10px;">${error.message}</p>
+          <p style="color:#666; font-size:12px; margin-top:10px;">
+            请查看浏览器控制台（F12）了解详细错误信息
+          </p>
         </div>
       `;
     }
