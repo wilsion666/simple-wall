@@ -4,7 +4,7 @@
  * 方法: POST
  *
  * 环境变量：
- * - GEMINI_API_KEY: Google Gemini 的 API Key
+ * - gemini3propreview: Google Gemini 的 API Key
  */
 
 export default async function handler(req, res) {
@@ -12,11 +12,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.gemini3propreview;
   if (!apiKey) {
-    console.error('[generate-listing] GEMINI_API_KEY not found in environment variables');
+    console.error('[generate-listing] gemini3propreview not found in environment variables');
     return res.status(500).json({
-      error: 'Server configuration error: GEMINI_API_KEY not found',
+      error: 'Server configuration error: gemini3propreview not found',
       code: 'CONFIG_ERROR',
     });
   }

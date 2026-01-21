@@ -16,7 +16,7 @@
 - ✅ 返回 JSON 格式结果
 - ✅ 完整的错误处理
 
-**环境变量**: `GEMINI_API_KEY`（已在 Vercel 配置）
+**环境变量**: `gemini3propreview`（已在 Vercel 配置）
 
 ### 2. 前端功能实现
 
@@ -58,9 +58,9 @@
 
 登录 Vercel 控制台，确认已配置：
 
-- **变量名**: `GEMINI_API_KEY`
-- **值**: `AIza...`（你的 Gemini API Key）
-- **环境**: Production, Preview, Development
+- **变量名**: `gemini3propreview`
+- **值**: 你的 Gemini API Key（已配置）
+- **环境**: Production, Preview, Development（All Environments）
 
 ### 2. 部署到 Vercel
 
