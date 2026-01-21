@@ -3,8 +3,10 @@
  * 路径: /api/generate-listing
  * 方法: POST
  *
+ * 此版本使用 Google 官方 Gemini API（不是 Vercel AI Gateway）
+ * 
  * 环境变量：
- * - AI_GATEWAY_API_KEY: Vercel AI Gateway 的 API Key
+ * - GOOGLE_GEMINI_API_KEY: Google Gemini 的 API Key
  */
 
 export default async function handler(req, res) {
@@ -12,12 +14,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  const apiKey = process.env.AI_GATEWAY_API_KEY;
+  const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
   if (!apiKey) {
-    console.error('[generate-listing] ❌ AI_GATEWAY_API_KEY not found in environment variables');
-    console.error('[generate-listing] Available env keys:', Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY')));
+    console.error('[generate-listing] ❌ GOOGLE_GEMINI_API_KEY not found in environment variables');
+    console.error('[generate-listing] Available env keys:', Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY') || k.includes('GEMINI')));
     return res.status(500).json({
-      error: 'Server configuration error: AI_GATEWAY_API_KEY not found',
+      error: 'Server configuration error: GOOGLE_GEMINI_API_KEY not found',
       code: 'CONFIG_ERROR',
     });
   }
@@ -90,13 +92,11 @@ export default async function handler(req, res) {
   ]
 }`;
 
-  // Vercel AI Gateway URL - 使用 google/gemini-3-flash（支持视觉）
-  const url = 'https://gateway.ai.cloudflare.com/v1/YOUR_ACCOUNT_ID/YOUR_GATEWAY_ID/google/gemini-3-flash';
+  // Google Gemini API URL - 使用 gemini-1.5-flash 支持视觉
+  const modelName = 'gemini-1.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
   
-  // ⚠️ 注意：请将上面的 YOUR_ACCOUNT_ID 和 YOUR_GATEWAY_ID 替换为你的实际值
-  // 或者直接使用你在 Vercel AI Gateway 控制台看到的完整 endpoint URL
-  
-  // 构建请求体（保持 Google Gemini API 格式）
+  // 构建请求体
   const payload = {
     contents: [
       {
@@ -122,14 +122,14 @@ export default async function handler(req, res) {
 
   try {
     console.log(`[generate-listing] 📤 Processing ASIN: ${asin || 'N/A'}`);
-    console.log(`[generate-listing] 🌐 Request URL: ${url}`);
-    console.log(`[generate-listing] 🔑 Authorization: Bearer ${keyPreview}`);
+    console.log(`[generate-listing] 🌐 Request URL: ${url}?key=****`);
+    console.log(`[generate-listing] 🤖 Model: ${modelName}`);
     
-    const response = await fetch(url, {
+    // Google 官方 API 使用 URL 参数传递 key
+    const response = await fetch(`${url}?key=${encodeURIComponent(apiKey)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify(payload),
     });
@@ -139,21 +139,23 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('[generate-listing] ❌ API error:', response.status);
+      console.error('[generate-listing] ❌ Gemini API error:', response.status);
       console.error('[generate-listing] Error details:', JSON.stringify(data, null, 2));
       
       // 特别检查 API key 相关错误
-      const errorMsg = data.error?.message || JSON.stringify(data);
-      if (errorMsg.toLowerCase().includes('api key') || errorMsg.toLowerCase().includes('unauthorized')) {
+      const errorMsg = JSON.stringify(data);
+      if (errorMsg.toLowerCase().includes('api key') || 
+          errorMsg.toLowerCase().includes('api_key_invalid') ||
+          errorMsg.toLowerCase().includes('unauthorized')) {
         console.error('[generate-listing] 🔐 This appears to be an API key authentication error!');
         console.error('[generate-listing] 💡 Please check:');
-        console.error('[generate-listing]    1. AI_GATEWAY_API_KEY is set in Vercel environment variables');
-        console.error('[generate-listing]    2. The key value is correct (check for extra spaces)');
-        console.error('[generate-listing]    3. The gateway URL includes your correct account ID and gateway ID');
+        console.error('[generate-listing]    1. GOOGLE_GEMINI_API_KEY is set in Vercel environment variables');
+        console.error('[generate-listing]    2. The key is valid (get it from: https://aistudio.google.com/app/apikey)');
+        console.error('[generate-listing]    3. The key has no extra spaces or line breaks');
       }
       
       return res.status(response.status).json({
-        error: data.error?.message || 'AI Gateway API error',
+        error: data.error?.message || 'Gemini API error',
         code: 'API_ERROR',
         status: response.status,
         details: data,
@@ -196,7 +198,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log(`[generate-listing] Success for ASIN: ${asin || 'N/A'}`);
+    console.log(`[generate-listing] ✅ Success for ASIN: ${asin || 'N/A'}`);
     
     return res.status(200).json({
       success: true,
