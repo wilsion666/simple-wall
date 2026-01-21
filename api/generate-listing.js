@@ -12,12 +12,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  const apiKey = process.env.AI_GATEWAY_API_KEY;
+  const apiKey = process.env.gemini3propreview;
   if (!apiKey) {
-    console.error('[generate-listing] ❌ AI_GATEWAY_API_KEY not found in environment variables');
-    console.error('[generate-listing] Available env keys:', Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY')));
+    console.error('[generate-listing] ❌ gemini3propreview not found in environment variables');
+    console.error('[generate-listing] Available env keys:', Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY') || k.includes('gemini')));
     return res.status(500).json({
-      error: 'Server configuration error: AI_GATEWAY_API_KEY not found',
+      error: 'Server configuration error: gemini3propreview not found',
       code: 'CONFIG_ERROR',
     });
   }
@@ -90,13 +90,11 @@ export default async function handler(req, res) {
   ]
 }`;
 
-  // Vercel AI Gateway URL - 使用 google/gemini-3-flash（支持视觉）
-  const url = 'https://gateway.ai.cloudflare.com/v1/YOUR_ACCOUNT_ID/YOUR_GATEWAY_ID/google/gemini-3-flash';
+  // Google Gemini 官方 API URL
+  const modelName = 'gemini-1.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
   
-  // ⚠️ 注意：请将上面的 YOUR_ACCOUNT_ID 和 YOUR_GATEWAY_ID 替换为你的实际值
-  // 或者直接使用你在 Vercel AI Gateway 控制台看到的完整 endpoint URL
-  
-  // 构建请求体（保持 Google Gemini API 格式）
+  // 构建请求体（Google Gemini API 格式）
   const payload = {
     contents: [
       {
@@ -122,14 +120,15 @@ export default async function handler(req, res) {
 
   try {
     console.log(`[generate-listing] 📤 Processing ASIN: ${asin || 'N/A'}`);
-    console.log(`[generate-listing] 🌐 Request URL: ${url}`);
-    console.log(`[generate-listing] 🔑 Authorization: Bearer ${keyPreview}`);
+    console.log(`[generate-listing] 🌐 Request URL: ${url}?key=****`);
+    console.log(`[generate-listing] 🤖 Model: ${modelName}`);
+    console.log(`[generate-listing] 🔑 API Key: ${keyPreview}`);
     
-    const response = await fetch(url, {
+    // Google 官方 API 使用 URL 参数传递 key（不是 Bearer token）
+    const response = await fetch(`${url}?key=${encodeURIComponent(apiKey)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify(payload),
     });
