@@ -67,8 +67,7 @@ export default async function handler(req, res) {
   console.log(`[generate-listing] 🖼️  Image URL: ${imageUrl ? 'provided' : 'not provided'}`);
 
   // 构建提示词
-  const systemPrompt = `假如你是一位资深亚马逊美国站Listing文案专家，
-擅长仅依据【输入标题】与【输入主图】提取真实信息并输出合规文案。
+  const systemPrompt = `你是一位资深亚马逊美国站Listing文案专家，擅长仅依据【输入标题】与【输入主图】提取真实信息并输出合规文案。
 
 【任务】
 根据标题+主图生成：产品名、英文标题、中文标题、5条英文五点（不要和原标题重复）。
@@ -77,7 +76,7 @@ export default async function handler(req, res) {
 1) 只能用标题/主图能确定的信息；不确定必须写入 assumptions（含依据）。
 2) 合规：不用emoji/符号花样；不写"best/perfect/guaranteed"等夸张词；不虚构尺寸/材质/数量。
 3) 英文Title ≤ 180字符；每条Bullet ≤ 180字符；Bullet写法：Feature → Benefit → Use case。
-4) 输出必须为严格JSON，不要额外解释，不要Markdown。
+4) 输出必须为严格JSON格式，不要额外解释，不要Markdown代码块，直接输出JSON对象。
 
 【输出JSON结构】
 {
@@ -89,7 +88,9 @@ export default async function handler(req, res) {
   "assumptions": [
     {"item": "", "reason": "evidence from title or image"}
   ]
-}`;
+}
+
+请严格按照上述JSON结构输出，不要添加任何其他内容。`;
 
   // Vercel AI Gateway URL (OpenAI-compatible)
   const url = 'https://ai-gateway.vercel.sh/v1/chat/completions';
@@ -103,13 +104,23 @@ export default async function handler(req, res) {
   ];
 
   // 如果有图片URL，添加图片内容
-  if (imageUrl) {
-    messageContent.push({
-      type: 'image_url',
-      image_url: {
-        url: imageUrl
-      }
-    });
+  if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim()) {
+    // 验证图片 URL 格式
+    try {
+      new URL(imageUrl); // 验证是否为有效 URL
+      messageContent.push({
+        type: 'image_url',
+        image_url: {
+          url: imageUrl
+        }
+      });
+      console.log(`[generate-listing] ✅ Image URL added: ${imageUrl.substring(0, 50)}...`);
+    } catch (urlError) {
+      console.warn(`[generate-listing] ⚠️ Invalid image URL format, skipping image: ${imageUrl}`);
+      // 继续执行，不使用图片
+    }
+  } else {
+    console.log(`[generate-listing] ℹ️ No image URL provided, generating text-only listing`);
   }
 
   // 构建请求体（OpenAI Chat Completions 格式）
@@ -121,14 +132,24 @@ export default async function handler(req, res) {
         content: messageContent
       }
     ],
-    temperature: 0.4,
-    response_format: { type: 'json_object' }
+    temperature: 0.4
   };
+
+  // 尝试添加 JSON 格式要求（如果支持）
+  // 注意：某些 Gateway 版本可能不支持 response_format，先注释掉
+  // 如果模型支持，可以在提示词中明确要求 JSON 输出
+  // payload.response_format = { type: 'json_object' };
 
   try {
     console.log(`[generate-listing] 🌐 Request URL: ${url}`);
     console.log(`[generate-listing] 🤖 Model: google/gemini-3-flash`);
     console.log(`[generate-listing] 🔑 Using API Key: ${keyPreview}`);
+    console.log(`[generate-listing] 📦 Payload preview:`, {
+      model: payload.model,
+      messages_count: payload.messages.length,
+      message_content_types: payload.messages[0].content.map(c => c.type),
+      temperature: payload.temperature
+    });
     
     // 使用 Authorization: Bearer <token> header
     const response = await fetch(url, {
@@ -148,20 +169,41 @@ export default async function handler(req, res) {
       console.error('[generate-listing] ❌ API error:', response.status);
       console.error('[generate-listing] Error details:', JSON.stringify(data, null, 2));
       
+      // 提取更详细的错误信息
+      let errorMessage = 'AI Gateway API error';
+      if (data.error) {
+        if (typeof data.error === 'string') {
+          errorMessage = data.error;
+        } else if (data.error.message) {
+          errorMessage = data.error.message;
+        } else if (data.error.error) {
+          errorMessage = data.error.error;
+        }
+      }
+      
       // 检查 API key 相关错误
-      const errorMsg = JSON.stringify(data);
-      if (errorMsg.toLowerCase().includes('api key') || 
-          errorMsg.toLowerCase().includes('unauthorized') ||
-          errorMsg.toLowerCase().includes('authentication')) {
+      const errorMsg = JSON.stringify(data).toLowerCase();
+      if (errorMsg.includes('api key') || 
+          errorMsg.includes('unauthorized') ||
+          errorMsg.includes('authentication') ||
+          errorMsg.includes('invalid api key')) {
         console.error('[generate-listing] 🔐 This appears to be an API key authentication error!');
         console.error('[generate-listing] 💡 Please check:');
         console.error('[generate-listing]    1. AI_GATEWAY_API_KEY is set in Vercel environment variables');
         console.error('[generate-listing]    2. The key starts with "vck_"');
         console.error('[generate-listing]    3. The key is valid and has no extra spaces');
+        errorMessage = 'API Key authentication failed. Please check your AI_GATEWAY_API_KEY configuration.';
+      } else if (errorMsg.includes('invalid input') || errorMsg.includes('invalid_request')) {
+        console.error('[generate-listing] ⚠️ Invalid input error detected');
+        console.error('[generate-listing] 💡 Possible causes:');
+        console.error('[generate-listing]    1. Model name may not be supported');
+        console.error('[generate-listing]    2. Request format may be incorrect');
+        console.error('[generate-listing]    3. Image URL may be invalid or inaccessible');
+        errorMessage = `Invalid input: ${errorMessage}. Please check the request format and image URL.`;
       }
       
       return res.status(response.status).json({
-        error: data.error?.message || 'AI Gateway API error',
+        error: errorMessage,
         code: 'API_ERROR',
         status: response.status,
         details: data,
