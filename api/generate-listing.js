@@ -4,6 +4,7 @@
  * 方法: POST
  *
  * 使用 Vercel AI Gateway (OpenAI-compatible API)
+ * 注意：推荐使用新的 /api/generate-ai-content?promptType=listing
  * 
  * 环境变量：
  * - AI_GATEWAY_API_KEY: Vercel AI Gateway 的 API Key (vck_ 开头)
@@ -66,17 +67,18 @@ export default async function handler(req, res) {
   console.log(`[generate-listing] 📝 Title: ${title.substring(0, 50)}...`);
   console.log(`[generate-listing] 🖼️  Image URL: ${imageUrl ? 'provided' : 'not provided'}`);
 
-  // 构建提示词
-  const systemPrompt = `你是一位资深亚马逊美国站Listing文案专家，擅长仅依据【输入标题】与【输入主图】提取真实信息并输出合规文案。
+  // 构建提示词（使用新的高转化 SEO 文案专家策略）
+  const systemPrompt = `你是一位拥有 10 年经验的亚马逊高级 Listing 专家，擅长将复杂的参数转化为消费者无法拒绝的购买冲动。
 
-【任务】
-根据标题+主图生成：产品名、英文标题、中文标题、5条英文五点（不要和原标题重复）。
+【任务逻辑】
+1. 品类锚点：从图中提取核心产品名，并识别 3 个权重最高的搜索关键词。
+2. 拒绝平庸：严禁使用如 "revolutionary, high-quality, must-have" 等空洞的 AI 常用词。请使用生活化、具体的动词（如：由 "keep you warm" 改为 "blocks biting wind"）。
+3. 卖点梳理：提炼 5 个差异化卖点。每个卖点必须遵循：[核心利益点大写] + [功能实现方式] + [用户获得的情感/实际收益]。
+4. 未满足需求：洞察目前同类产品差评中提到的 2 个致命伤，并在文案中隐性说明本项目已解决该问题。
 
-【要求】
-1) 只能用标题/主图能确定的信息；不确定必须写入 assumptions（含依据）。
-2) 合规：不用emoji/符号花样；不写"best/perfect/guaranteed"等夸张词；不虚构尺寸/材质/数量。
-3) 英文Title ≤ 180字符；每条Bullet ≤ 180字符；Bullet写法：Feature → Benefit → Use case。
-4) 输出必须为严格JSON格式，不要额外解释，不要Markdown代码块，直接输出JSON对象。
+【输出要求】
+- 地道美式英语，符合亚马逊合规标准
+- 输出必须为严格JSON格式，不要额外解释，不要Markdown代码块
 
 【输出JSON结构】
 {
@@ -88,9 +90,7 @@ export default async function handler(req, res) {
   "assumptions": [
     {"item": "", "reason": "evidence from title or image"}
   ]
-}
-
-请严格按照上述JSON结构输出，不要添加任何其他内容。`;
+}`;
 
   // Vercel AI Gateway URL (OpenAI-compatible)
   const url = 'https://ai-gateway.vercel.sh/v1/chat/completions';
