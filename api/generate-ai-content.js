@@ -99,6 +99,9 @@ export default async function handler(req, res) {
     });
   }
 
+  // 检查是否启用流式输出
+  const stream = body.stream !== false; // 默认启用流式
+
   // 构建请求体（OpenAI Chat Completions 格式）
   const payload = {
     model: 'google/gemini-3-flash',
@@ -109,13 +112,15 @@ export default async function handler(req, res) {
       }
     ],
     temperature: 0.4,
-    response_format: { type: 'json_object' }
+    stream: stream, // 启用流式响应
+    // 注意：流式模式下，response_format 可能不被支持，我们在提示词中要求 JSON
   };
 
   try {
     console.log(`[generate-ai-content] 🌐 Request URL: ${url}`);
     console.log(`[generate-ai-content] 🤖 Model: google/gemini-3-flash`);
     console.log(`[generate-ai-content] 🔑 Using API Key: ${keyPreview}`);
+    console.log(`[generate-ai-content] 📡 Stream mode: ${stream}`);
     
     // 使用 Authorization: Bearer <token> header
     const response = await fetch(url, {
@@ -128,64 +133,148 @@ export default async function handler(req, res) {
     });
 
     console.log(`[generate-ai-content] 📥 Response status: ${response.status}`);
-    
-    const data = await response.json();
 
     if (!response.ok) {
+      const errorData = await response.json();
       console.error('[generate-ai-content] ❌ API error:', response.status);
-      console.error('[generate-ai-content] Error details:', JSON.stringify(data, null, 2));
+      console.error('[generate-ai-content] Error details:', JSON.stringify(errorData, null, 2));
       
       return res.status(response.status).json({
-        error: data.error?.message || 'AI Gateway API error',
+        error: errorData.error?.message || 'AI Gateway API error',
         code: 'API_ERROR',
         status: response.status,
-        details: data,
+        details: errorData,
       });
     }
 
-    // 提取生成的内容 (OpenAI format)
-    const choices = data.choices || [];
-    const messageContentResult = choices[0]?.message?.content;
+    // 流式响应处理
+    if (stream) {
+      // 设置 SSE 响应头
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
 
-    if (!messageContentResult) {
-      console.warn('[generate-ai-content] No content in response');
-      return res.status(500).json({
-        error: 'No content returned from AI Gateway',
-        code: 'NO_CONTENT',
+      // 流式转发 AI Gateway 的响应
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            // 处理剩余的 buffer
+            if (buffer.trim()) {
+              const lines = buffer.split('\n');
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  const data = line.slice(6).trim();
+                  if (data === '[DONE]') {
+                    res.write('data: [DONE]\n\n');
+                  } else {
+                    try {
+                      const parsed = JSON.parse(data);
+                      const delta = parsed.choices?.[0]?.delta;
+                      if (delta?.content) {
+                        res.write(`data: ${JSON.stringify({ content: delta.content, done: false })}\n\n`);
+                      }
+                    } catch (e) {
+                      // 忽略解析错误
+                    }
+                  }
+                }
+              }
+            }
+            // 发送完成信号
+            res.write('data: [DONE]\n\n');
+            res.end();
+            break;
+          }
+
+          // 解码数据块
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // 保留最后一行（可能不完整）
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') {
+                res.write('data: [DONE]\n\n');
+                res.end();
+                return;
+              } else {
+                try {
+                  const parsed = JSON.parse(data);
+                  const delta = parsed.choices?.[0]?.delta;
+                  if (delta?.content) {
+                    res.write(`data: ${JSON.stringify({ content: delta.content, done: false })}\n\n`);
+                  }
+                } catch (e) {
+                  // 忽略解析错误
+                }
+              }
+            }
+          }
+        }
+      } catch (streamError) {
+        console.error('[generate-ai-content] Stream error:', streamError);
+        res.write(`data: ${JSON.stringify({ error: streamError.message, done: true })}\n\n`);
+        res.end();
+      }
+    } else {
+      // 非流式响应（保持向后兼容）
+      const data = await response.json();
+
+      // 提取生成的内容 (OpenAI format)
+      const choices = data.choices || [];
+      const messageContentResult = choices[0]?.message?.content;
+
+      if (!messageContentResult) {
+        console.warn('[generate-ai-content] No content in response');
+        return res.status(500).json({
+          error: 'No content returned from AI Gateway',
+          code: 'NO_CONTENT',
+        });
+      }
+
+      console.log(`[generate-ai-content] 📄 Raw content length: ${messageContentResult.length}`);
+
+      // 解析 JSON
+      let result;
+      try {
+        result = JSON.parse(messageContentResult);
+      } catch (e) {
+        console.error('[generate-ai-content] Failed to parse JSON:', e);
+        console.error('[generate-ai-content] Raw content:', messageContentResult.substring(0, 500));
+        return res.status(500).json({
+          error: 'Failed to parse AI response as JSON',
+          code: 'INVALID_JSON_RESPONSE',
+          rawContent: messageContentResult,
+        });
+      }
+
+      console.log(`[generate-ai-content] ✅ Success for ASIN: ${asin || 'N/A'}, Type: ${promptType}`);
+      
+      return res.status(200).json({
+        success: true,
+        promptType,
+        data: result,
       });
     }
-
-    console.log(`[generate-ai-content] 📄 Raw content length: ${messageContentResult.length}`);
-
-    // 解析 JSON
-    let result;
-    try {
-      result = JSON.parse(messageContentResult);
-    } catch (e) {
-      console.error('[generate-ai-content] Failed to parse JSON:', e);
-      console.error('[generate-ai-content] Raw content:', messageContentResult.substring(0, 500));
-      return res.status(500).json({
-        error: 'Failed to parse AI response as JSON',
-        code: 'INVALID_JSON_RESPONSE',
-        rawContent: messageContentResult,
-      });
-    }
-
-    console.log(`[generate-ai-content] ✅ Success for ASIN: ${asin || 'N/A'}, Type: ${promptType}`);
-    
-    return res.status(200).json({
-      success: true,
-      promptType,
-      data: result,
-    });
 
   } catch (error) {
     console.error('[generate-ai-content] Network or parsing error:', error);
-    return res.status(500).json({
-      error: 'Failed to communicate with AI Gateway',
-      code: 'NETWORK_ERROR',
-      message: error.message,
-    });
+    if (stream && !res.headersSent) {
+      res.write(`data: ${JSON.stringify({ error: error.message, done: true })}\n\n`);
+      res.end();
+    } else {
+      return res.status(500).json({
+        error: 'Failed to communicate with AI Gateway',
+        code: 'NETWORK_ERROR',
+        message: error.message,
+      });
+    }
   }
 }
 

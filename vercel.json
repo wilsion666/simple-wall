@@ -22,5 +22,13 @@
     { "source": "/chat.html", "destination": "/pages/chat.html", "permanent": true },
     { "source": "/chat-full.html", "destination": "/pages/chat-full.html", "permanent": true },
     { "source": "/chat-full", "destination": "/chat", "permanent": true }
-  ]
+  ],
+  "functions": {
+    "api/generate-listing.js": {
+      "maxDuration": 60
+    },
+    "api/generate-ai-content.js": {
+      "maxDuration": 60
+    }
+  }
 }
