@@ -60,12 +60,10 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!imageUrl || typeof imageUrl !== 'string') {
-    return res.status(400).json({
-      error: 'Missing required field: imageUrl',
-      code: 'MISSING_IMAGE_URL',
-    });
-  }
+  // imageUrl 可选，因为不是所有产品都有图片
+  console.log(`[generate-listing] 📤 Processing ASIN: ${asin || 'N/A'}`);
+  console.log(`[generate-listing] 📝 Title: ${title.substring(0, 50)}...`);
+  console.log(`[generate-listing] 🖼️  Image URL: ${imageUrl ? 'provided' : 'not provided'}`);
 
   // 构建提示词
   const systemPrompt = `假如你是一位资深亚马逊美国站Listing文案专家，
@@ -96,22 +94,33 @@ export default async function handler(req, res) {
   const modelName = 'gemini-1.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
   
+  // 构建 parts 数组
+  const parts = [
+    {
+      text: systemPrompt + `\n\n【输入标题】\n${title}`
+    }
+  ];
+
+  // 如果有图片URL，添加图片内容
+  if (imageUrl && typeof imageUrl === 'string') {
+    try {
+      parts.push({
+        inline_data: {
+          mime_type: 'image/jpeg',
+          data: await fetchImageAsBase64(imageUrl)
+        }
+      });
+    } catch (imageError) {
+      console.warn('[generate-listing] ⚠️ Failed to fetch image, continuing without image:', imageError.message);
+      // 继续执行，不使用图片
+    }
+  }
+  
   // 构建请求体
   const payload = {
     contents: [
       {
-        parts: [
-          {
-            text: systemPrompt + `\n\n【输入标题】\n${title}`
-          },
-          {
-            // 使用图片 URL
-            inline_data: {
-              mime_type: 'image/jpeg',
-              data: await fetchImageAsBase64(imageUrl)
-            }
-          }
-        ]
+        parts: parts
       }
     ],
     generationConfig: {
@@ -121,9 +130,9 @@ export default async function handler(req, res) {
   };
 
   try {
-    console.log(`[generate-listing] 📤 Processing ASIN: ${asin || 'N/A'}`);
     console.log(`[generate-listing] 🌐 Request URL: ${url}?key=****`);
     console.log(`[generate-listing] 🤖 Model: ${modelName}`);
+    console.log(`[generate-listing] 🔑 Using API Key: ${keyPreview}`);
     
     // Google 官方 API 使用 URL 参数传递 key
     const response = await fetch(`${url}?key=${encodeURIComponent(apiKey)}`, {
