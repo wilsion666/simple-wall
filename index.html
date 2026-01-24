@@ -610,21 +610,6 @@
 
   <h2>亚马逊新品 - 产品分类</h2>
 
-  <!-- AI 生成的汽车图片 -->
-  <div class="car-image-section" style="margin-bottom:20px; padding:16px; background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,.06); max-width:500px;">
-    <div style="font-weight:600; margin-bottom:10px;">🚗 AI 汽车图片</div>
-    <div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;">
-      <div class="car-imgbox" style="width:200px; height:200px; border-radius:10px; overflow:hidden; background:#f2f2f2; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
-        <img id="carImage" src="" alt="汽车" style="width:100%; height:100%; object-fit:cover; display:none;" />
-        <span id="carImagePlaceholder" style="color:#999; font-size:14px;">点击生成</span>
-      </div>
-      <div>
-        <button type="button" id="generateCarBtn" class="nav-btn" style="margin-bottom:8px;">生成汽车图片</button>
-        <p id="carImageStatus" class="muted" style="margin:0; font-size:13px;"></p>
-      </div>
-    </div>
-  </div>
-
   <div class="bar">
     <select id="categorySelect">
       <option value="all">加载中...</option>
@@ -1509,58 +1494,9 @@
   }
 
   // ============================================================
-  // 生成汽车图片（调用 /api/generate-image）
-  // ============================================================
-  async function generateCarImage() {
-    const btn = $('generateCarBtn');
-    const img = $('carImage');
-    const placeholder = $('carImagePlaceholder');
-    const status = $('carImageStatus');
-
-    btn.disabled = true;
-    placeholder.style.display = 'none';
-    img.style.display = 'none';
-    status.textContent = '正在生成...';
-    status.style.color = '#666';
-
-    try {
-      const res = await fetch('/api/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: 'A photorealistic car, professional product photography, clean white background, high quality',
-          aspectRatio: '1:1',
-          imageSize: '1024x1024'
-        })
-      });
-      const data = await res.json();
-
-      if (data.success && data.imageDataUrl) {
-        img.src = data.imageDataUrl;
-        img.style.display = 'block';
-        status.textContent = '生成成功';
-        status.style.color = '#059669';
-      } else {
-        status.textContent = '生成失败：' + (data.error || '未返回图片');
-        status.style.color = '#dc2626';
-        placeholder.style.display = 'block';
-      }
-    } catch (e) {
-      status.textContent = '请求失败：' + (e.message || '网络错误');
-      status.style.color = '#dc2626';
-      placeholder.style.display = 'block';
-    } finally {
-      btn.disabled = false;
-    }
-  }
-
-  // ============================================================
   // 事件监听
   // ============================================================
   
-  // 生成汽车图片
-  $('generateCarBtn').addEventListener('click', generateCarImage);
-
   // 类目选择
   $('categorySelect').addEventListener('change', (e) => {
     currentCategory = e.target.value;
