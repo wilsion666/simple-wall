@@ -748,61 +748,50 @@
       $('statusText').textContent = '加载中...';
       $('errorText').textContent = '';
 
-      const response = await fetch('/data/csv/1.19-500.csv?v=' + Date.now());
-      
-      if (!response.ok) {
-        throw new Error(`加载失败: ${response.status} 请确认存在: data/csv/1.19-500.csv`);
-      }
+      // 并行加载两个 CSV
+      const [text1, text2] = await Promise.all([
+        fetch('/data/csv/1.19-500.csv?v=' + Date.now()).then(r => { if (!r.ok) throw new Error('1.19-500 加载失败: ' + r.status); return r.text(); }),
+        fetch('/data/csv/1.24-简化版.csv?v=' + Date.now()).then(r => { if (!r.ok) throw new Error('1.24-简化版 加载失败: ' + r.status); return r.text(); })
+      ]);
 
-      const text = await response.text();
-      const rows = parseCSV(text);
-
-      if (rows.length === 0) {
-        throw new Error('CSV 文件为空');
-      }
-
-      // 解析表头
-      const headers = rows[0].map(h => h.trim());
-      const headerMap = {};
-      headers.forEach((h, i) => {
-        headerMap[h] = i;
-      });
-
-      // 检查必需字段
+      const productMap = new Map(); // 按 ASIN 去重，同 ASIN 时 1.24 覆盖 1.19
       const requiredFields = ['ASIN', '小类目', '月销量', '毛利率'];
-      for (const field of requiredFields) {
-        if (!(field in headerMap)) {
-          throw new Error(`CSV 缺少必需字段: ${field}`);
+
+      function addCSVToMap(text, name) {
+        const rows = parseCSV(text);
+        if (rows.length === 0) return;
+        const headers = rows[0].map(h => h.trim());
+        const headerMap = {};
+        headers.forEach((h, i) => { headerMap[h] = i; });
+        for (const f of requiredFields) {
+          if (!(f in headerMap)) throw new Error(name + ' 缺少必需字段: ' + f);
+        }
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          const asin = (row[headerMap['ASIN']] || '').trim();
+          if (!asin) continue;
+          const categoryText = (row[headerMap['小类目']] || '').trim();
+          const categories = categoryText.split('\n').map(c => c.trim()).filter(c => c);
+          const product = {
+            asin: asin,
+            image: (row[headerMap['商品主图']] || '').trim(),
+            title: (row[headerMap['商品标题']] || '').trim(),
+            detailUrl: (row[headerMap['商品详情页链接']] || '').trim(),
+            smallCategory: categories[0] || '',
+            allCategories: categories,
+            monthlySales: parseNumber(row[headerMap['月销量']] || 0),
+            grossMargin: (row[headerMap['毛利率']] || '').trim(),
+            price: (row[headerMap['价格($)']] || '').trim()
+          };
+          productMap.set(asin, product);
         }
       }
 
-      // 解析产品数据
-      const productMap = new Map(); // 用于按 ASIN 去重
+      addCSVToMap(text1, '1.19-500.csv');
+      addCSVToMap(text2, '1.24-简化版.csv');
 
-      for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        const asin = (row[headerMap['ASIN']] || '').trim();
-        
-        if (!asin) continue;
-
-        // 处理小类目（可能有多行）
-        const categoryText = (row[headerMap['小类目']] || '').trim();
-        const categories = categoryText.split('\n').map(c => c.trim()).filter(c => c);
-        
-        const product = {
-          asin: asin,
-          image: (row[headerMap['商品主图']] || '').trim(),
-          title: (row[headerMap['商品标题']] || '').trim(),
-          detailUrl: (row[headerMap['商品详情页链接']] || '').trim(),
-          smallCategory: categories[0] || '', // 取第一个类目
-          allCategories: categories,          // 保存所有类目
-          monthlySales: parseNumber(row[headerMap['月销量']] || 0),
-          grossMargin: (row[headerMap['毛利率']] || '').trim(),
-          price: (row[headerMap['价格($)']] || '').trim()
-        };
-
-        // 去重：保留最后一条
-        productMap.set(asin, product);
+      if (productMap.size === 0) {
+        throw new Error('两个 CSV 均无有效产品数据');
       }
 
       allProducts = Array.from(productMap.values());
